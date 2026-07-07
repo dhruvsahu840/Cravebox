@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { AdminSidebar } from '@/components/admin/AdminSidebar'
+import { AdminLayout } from '@/components/admin/AdminLayout'
 import { ChevronRight, Search, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
@@ -42,10 +42,8 @@ export default function AdminOrders() {
   const filtered = orders.filter(o => o.orderNumber?.toLowerCase().includes(search.toLowerCase()) || o.user?.name?.toLowerCase().includes(search.toLowerCase()))
 
   return (
-    <div className="flex min-h-screen bg-green-50">
-      <AdminSidebar />
-      <main className="flex-1 p-6 overflow-auto">
-        <h1 className="text-2xl font-black text-green-900 mb-6">Orders</h1>
+    <AdminLayout>
+        <h1 className="text-xl sm:text-2xl font-black text-green-900 mb-4 sm:mb-6">Orders</h1>
 
         <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
           {STATUSES.map(s => (
@@ -62,7 +60,8 @@ export default function AdminOrders() {
         </div>
 
         <div className="card overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[600px]">
             <thead>
               <tr className="border-b border-green-100 text-gray-400 text-xs uppercase bg-green-50">
                 <th className="px-5 py-3 text-left">Order</th>
@@ -110,8 +109,8 @@ export default function AdminOrders() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
-      </main>
-    </div>
+    </AdminLayout>
   )
 }

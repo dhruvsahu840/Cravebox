@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { AdminSidebar } from '@/components/admin/AdminSidebar'
+import { AdminLayout } from '@/components/admin/AdminLayout'
 import { Search, ToggleRight, ToggleLeft, Loader2, User } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -25,10 +25,8 @@ export default function AdminCustomers() {
   }
 
   return (
-    <div className="flex min-h-screen bg-green-50">
-      <AdminSidebar />
-      <main className="flex-1 p-6 overflow-auto">
-        <h1 className="text-2xl font-black text-green-900 mb-6">Customers</h1>
+    <AdminLayout>
+        <h1 className="text-xl sm:text-2xl font-black text-green-900 mb-4 sm:mb-6">Customers</h1>
 
         <div className="relative mb-5 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15}/>
@@ -36,7 +34,8 @@ export default function AdminCustomers() {
         </div>
 
         <div className="card overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[500px]">
             <thead>
               <tr className="border-b border-green-100 text-gray-400 text-xs uppercase bg-green-50">
                 <th className="px-5 py-3 text-left">Customer</th>
@@ -81,8 +80,8 @@ export default function AdminCustomers() {
               <button onClick={() => setPage(p => Math.min(pages, p + 1))} disabled={page === pages} className="btn-secondary py-1.5 px-4 text-sm disabled:opacity-40">Next →</button>
             </div>
           )}
+          </div>
         </div>
-      </main>
-    </div>
+    </AdminLayout>
   )
 }

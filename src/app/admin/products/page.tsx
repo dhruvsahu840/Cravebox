@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { Plus, Pencil, Trash2, Search, ToggleLeft, ToggleRight, Loader2 } from 'lucide-react'
-import { AdminSidebar } from '@/components/admin/AdminSidebar'
+import { AdminLayout } from '@/components/admin/AdminLayout'
 import { ProductModal } from '@/components/admin/ProductModal'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
@@ -13,6 +13,25 @@ export default function AdminProducts() {
   const [search, setSearch]       = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing]     = useState<any>(null)
+  const [selected, setSelected]   = useState<string[]>([])
+
+  const toggleSelect = (id: string) => setSelected(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id])
+  const selectAll = () => setSelected(selected.length === products.length ? [] : products.map(p => p._id))
+
+  const bulkToggle = async (available: boolean) => {
+    await Promise.all(selected.map(id => fetch(`/api/products/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isAvailable: available }) })))
+    setProducts(ps => ps.map(p => selected.includes(p._id) ? { ...p, isAvailable: available } : p))
+    setSelected([])
+    toast.success(`${selected.length} products updated`)
+  }
+
+  const bulkDelete = async () => {
+    if (!confirm(`Delete ${selected.length} products?`)) return
+    await Promise.all(selected.map(id => fetch(`/api/products/${id}`, { method: 'DELETE' })))
+    setProducts(ps => ps.filter(p => !selected.includes(p._id)))
+    setSelected([])
+    toast.success('Products deleted')
+  }
 
   const fetchProducts = async () => {
     const [pRes, cRes] = await Promise.all([
@@ -48,12 +67,10 @@ export default function AdminProducts() {
   }
 
   return (
-    <div className="flex min-h-screen bg-green-50">
-      <AdminSidebar />
-      <main className="flex-1 p-6 overflow-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-black text-green-900">Products</h1>
-          <button onClick={() => { setEditing(null); setModalOpen(true) }} className="btn-primary flex items-center gap-2 text-sm">
+    <AdminLayout>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl font-black text-green-900">Products</h1>
+          <button onClick={() => { setEditing(null); setModalOpen(true) }} className="btn-primary flex items-center justify-center gap-2 text-sm w-full sm:w-auto">
             <Plus size={18}/> Add product
           </button>
         </div>
@@ -63,10 +80,21 @@ export default function AdminProducts() {
           <input className="input pl-9 text-sm" placeholder="Search products..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
 
+        {selected.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4 p-3 bg-green-50 rounded-xl border border-green-200">
+            <span className="text-sm font-bold text-green-800 self-center">{selected.length} selected</span>
+            <button onClick={() => bulkToggle(true)} className="btn-primary text-xs py-1.5 px-3">Enable all</button>
+            <button onClick={() => bulkToggle(false)} className="btn-secondary text-xs py-1.5 px-3">Disable all</button>
+            <button onClick={bulkDelete} className="text-xs py-1.5 px-3 rounded-xl border border-red-200 text-red-600 font-bold hover:bg-red-50">Delete</button>
+          </div>
+        )}
+
         <div className="card overflow-hidden">
-          <table className="w-full">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[500px]">
             <thead>
               <tr className="border-b border-green-100 text-gray-400 text-xs uppercase bg-green-50">
+                <th className="px-3 py-3"><input type="checkbox" checked={selected.length === products.length && products.length > 0} onChange={selectAll} /></th>
                 <th className="px-5 py-3 text-left">Product</th>
                 <th className="px-5 py-3 text-left hidden md:table-cell">Category</th>
                 <th className="px-5 py-3 text-right">Price</th>
@@ -76,9 +104,10 @@ export default function AdminProducts() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={5} className="text-center py-12"><Loader2 className="inline animate-spin text-green-500" size={24}/></td></tr>
+                <tr><td colSpan={6} className="text-center py-12"><Loader2 className="inline animate-spin text-green-500" size={24}/></td></tr>
               ) : products.map(product => (
                 <tr key={product._id} className="border-b border-green-50 hover:bg-green-50/50 transition-colors">
+                  <td className="px-3 py-4"><input type="checkbox" checked={selected.includes(product._id)} onChange={() => toggleSelect(product._id)} /></td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-green-50 rounded-lg overflow-hidden flex-shrink-0">
@@ -116,12 +145,12 @@ export default function AdminProducts() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
-      </main>
 
       {modalOpen && (
         <ProductModal product={editing} categories={categories} onClose={() => { setModalOpen(false); setEditing(null) }} onSave={onSave} />
       )}
-    </div>
+    </AdminLayout>
   )
 }

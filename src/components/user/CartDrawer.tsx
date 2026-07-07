@@ -1,9 +1,11 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { X, ShoppingCart, Plus, Minus, Trash2, MapPin, ChevronRight, Loader2, Tag, CheckCircle } from 'lucide-react'
+import { X, ShoppingCart, Plus, Minus, Trash2, MapPin, ChevronRight, Loader2, Tag, CheckCircle, Clock } from 'lucide-react'
 import { useCart } from '@/store/cartStore'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { getDeliveryEstimate } from '@/lib/delivery'
+import { EmptyState } from '@/components/shared/EmptyState'
 import toast from 'react-hot-toast'
 
 export function CartDrawer() {
@@ -14,6 +16,7 @@ export function CartDrawer() {
   const [couponCode, setCoupon]   = useState('')
   const [couponData, setCouponData] = useState<any>(null)
   const [applyingCoupon, setApplying] = useState(false)
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([])
   const { data: session }         = useSession()
   const router                    = useRouter()
   const { items, updateQty, removeItem, clearCart, totalPrice, deliveryFee, tax } = useCart()
@@ -24,8 +27,21 @@ export function CartDrawer() {
     return () => document.removeEventListener('open-cart', open)
   }, [])
 
+  useEffect(() => {
+    if (session) {
+      fetch('/api/profile').then(r => r.json()).then(d => {
+        if (d.user?.addresses?.length) {
+          setSavedAddresses(d.user.addresses)
+          const def = d.user.addresses.find((a: any) => a.isDefault) || d.user.addresses[0]
+          if (def && !address.line1) setAddress({ line1: def.line1, city: def.city, pincode: def.pincode })
+        }
+      })
+    }
+  }, [session])
+
   const discount   = couponData?.discount || 0
   const grandTotal = totalPrice() + deliveryFee() + tax() - discount
+  const eta = getDeliveryEstimate(items.reduce((s, i) => s + i.qty, 0))
 
   const applyCoupon = async () => {
     if (!couponCode.trim()) return
@@ -112,12 +128,16 @@ export function CartDrawer() {
     <>
       {open && <div className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm" onClick={() => setOpen(false)} />}
 
-      <div className={`fixed right-0 top-0 bottom-0 w-full max-w-sm bg-white border-l border-green-100 z-50 flex flex-col transition-transform duration-300 shadow-2xl ${open ? 'translate-x-0' : 'translate-x-full'}`}>
-        {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-green-100 bg-green-50">
-          <h2 className="text-lg font-bold text-green-900 flex items-center gap-2">
-            <ShoppingCart size={20} className="text-green-600" /> Your Order
-          </h2>
+      <div className={`fixed right-0 top-0 bottom-0 w-full max-w-sm bg-white dark:bg-gray-900 border-l border-green-100 dark:border-gray-800 z-50 flex flex-col transition-transform duration-300 shadow-2xl ${open ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className="flex items-center justify-between p-5 border-b border-green-100 dark:border-gray-800 bg-green-50 dark:bg-gray-800/50">
+          <div>
+            <h2 className="text-lg font-bold text-green-900 dark:text-white flex items-center gap-2">
+              <ShoppingCart size={20} className="text-green-600" /> Your Order
+            </h2>
+            {items.length > 0 && (
+              <p className="text-xs text-green-600 flex items-center gap-1 mt-0.5"><Clock size={11} /> Delivery in {eta.label}</p>
+            )}
+          </div>
           <button onClick={() => setOpen(false)} className="w-8 h-8 bg-white rounded-lg border border-green-200 flex items-center justify-center hover:bg-green-50 transition-colors">
             <X size={16} className="text-gray-500" />
           </button>
@@ -126,10 +146,7 @@ export function CartDrawer() {
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
           {/* Items */}
           {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-40 text-gray-400">
-              <ShoppingCart size={40} className="mb-3 text-green-200" />
-              <p className="font-medium">Your cart is empty</p>
-            </div>
+            <EmptyState emoji="🛒" title="Your cart is empty" description="Add something delicious from the menu" actionLabel="Browse menu" onAction={() => { setOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }} />
           ) : (
             <div className="space-y-3">
               {items.map(item => (
@@ -185,9 +202,19 @@ export function CartDrawer() {
 
               {/* Address */}
               <div>
-                <p className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-2">
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2 mb-2">
                   <MapPin size={14} className="text-green-600" /> Delivery address
                 </p>
+                {savedAddresses.length > 0 && (
+                  <div className="flex gap-2 overflow-x-auto pb-2 mb-2 scrollbar-hide">
+                    {savedAddresses.map((addr: any) => (
+                      <button key={addr._id} onClick={() => setAddress({ line1: addr.line1, city: addr.city, pincode: addr.pincode })}
+                        className={`shrink-0 text-left px-3 py-2 rounded-xl border text-xs font-semibold transition-all ${address.line1 === addr.line1 ? 'border-green-500 bg-green-50 dark:bg-green-900/30 text-green-700' : 'border-gray-200 dark:border-gray-700 text-gray-500'}`}>
+                        {addr.label}<br /><span className="font-normal text-[10px]">{addr.line1.slice(0, 20)}…</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <div className="space-y-2">
                   <input className="input text-sm py-2.5" placeholder="Street / flat / building" value={address.line1} onChange={e => setAddress(a => ({ ...a, line1: e.target.value }))} />
                   <div className="grid grid-cols-2 gap-2">

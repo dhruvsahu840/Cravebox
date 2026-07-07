@@ -23,7 +23,7 @@ export default withAuth(
       authorized: ({ token, req }) => {
         const { pathname } = req.nextUrl
         if (pathname.startsWith('/admin')) return !!token
-        if (pathname.startsWith('/orders')) return !!token
+        if (pathname.startsWith('/orders') || pathname.startsWith('/profile')) return !!token
         return true
       },
     },

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { Logo } from '@/components/shared/Logo'
+import { ThemeToggle } from '@/components/shared/ThemeToggle'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -40,31 +42,30 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center px-4 py-10">
+    <div className="page-shell min-h-screen flex items-center justify-center px-4 py-10 relative">
+      <div className="absolute top-4 right-4"><ThemeToggle /></div>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 text-3xl font-black text-green-900">
-            🌿 Crave<span className="text-green-600">Box</span>
-          </Link>
-          <p className="text-gray-400 mt-2">Create your account</p>
+          <Logo size="lg" />
+          <p className="text-gray-400 dark:text-gray-500 mt-4">Create your account</p>
         </div>
 
-        <div className="card p-8 border-green-100">
+        <div className="card p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Full name *</label>
+              <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">Full name *</label>
               <input className="input" placeholder="Your name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} autoFocus />
             </div>
             <div>
-              <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Email *</label>
+              <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">Email *</label>
               <input type="email" className="input" placeholder="you@example.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
             </div>
             <div>
-              <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Phone (optional)</label>
+              <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">Phone (optional)</label>
               <input type="tel" className="input" placeholder="+91 98765 43210" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
             </div>
             <div>
-              <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Password *</label>
+              <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">Password *</label>
               <div className="relative">
                 <input type={showPw ? 'text' : 'password'} className="input pr-11" placeholder="Min 6 characters" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} />
                 <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-green-600">
@@ -73,7 +74,7 @@ export default function RegisterPage() {
               </div>
             </div>
             <div>
-              <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Confirm password *</label>
+              <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">Confirm password *</label>
               <input type="password" className="input" placeholder="Repeat password" value={form.confirm} onChange={e => setForm(f => ({ ...f, confirm: e.target.value }))} />
             </div>
             <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2 py-3 mt-2">
@@ -81,7 +82,7 @@ export default function RegisterPage() {
               {loading ? 'Creating account…' : 'Create account'}
             </button>
           </form>
-          <p className="text-center text-gray-400 text-sm mt-6">
+          <p className="text-center text-gray-400 dark:text-gray-500 text-sm mt-6">
             Already have an account?{' '}
             <Link href="/auth/login" className="text-green-600 hover:text-green-700 font-semibold">Sign in</Link>
           </p>

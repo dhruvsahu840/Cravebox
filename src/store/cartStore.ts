@@ -17,9 +17,9 @@ interface CartStore {
   hydrated: boolean
   setHydrated: (value: boolean) => void
 
-  addItem:     (item: Omit<CartItem, 'qty'>) => void
+  addItem:     (item: Omit<CartItem, 'qty'>, qty?: number) => void
   removeItem:  (id: string) => void
-  updateQty:   (id: string, qty: number) => void
+  updateQty:   (id: string, qty: number, customizations?: string) => void
   clearCart:   () => void
   totalItems:  () => number
   totalPrice:  () => number
@@ -39,21 +39,24 @@ export const useCart = create<CartStore>()(
       // ⭐ ADDED
       setHydrated: (value) => set({ hydrated: value }),
 
-      addItem: (item) => set((state) => {
-        const existing = state.items.find(i => i._id === item._id)
+      addItem: (item, qty = 1) => set((state) => {
+        const key = item.customizations || ''
+        const existing = state.items.find(i =>
+          i._id === item._id && (i.customizations || '') === key
+        )
 
         if (existing) {
           return {
             items: state.items.map(i =>
-              i._id === item._id
-                ? { ...i, qty: i.qty + 1 }
+              i._id === item._id && (i.customizations || '') === key
+                ? { ...i, qty: i.qty + qty }
                 : i
             ),
           }
         }
 
         return {
-          items: [...state.items, { ...item, qty: 1 }],
+          items: [...state.items, { ...item, qty }],
         }
       }),
 
@@ -61,16 +64,19 @@ export const useCart = create<CartStore>()(
         items: state.items.filter(i => i._id !== id),
       })),
 
-      updateQty: (id, qty) => set((state) => {
+      updateQty: (id, qty, customizations) => set((state) => {
+        const key = customizations || ''
         if (qty <= 0) {
           return {
-            items: state.items.filter(i => i._id !== id),
+            items: state.items.filter(i =>
+              !(i._id === id && (i.customizations || '') === key)
+            ),
           }
         }
 
         return {
           items: state.items.map(i =>
-            i._id === id
+            i._id === id && (i.customizations || '') === key
               ? { ...i, qty }
               : i
           ),

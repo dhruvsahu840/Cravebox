@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { CheckCircle, Clock, ChefHat, Bike, Package, XCircle, RefreshCw, Star } from 'lucide-react'
 import { Navbar } from '@/components/user/Navbar'
+import { PageBackground } from '@/components/user/PageBackground'
 import { ReviewForm } from '@/components/user/Reviews'
 import Link from 'next/link'
 
@@ -34,17 +35,15 @@ export default function OrderTrackingPage() {
   }, [id])
 
   if (loading) return (
-    <main className="min-h-screen bg-green-50">
-      <Navbar />
+    <div className="page-shell min-h-screen"><PageBackground /><Navbar />
       <div className="flex items-center justify-center h-64"><RefreshCw className="animate-spin text-green-500" size={32}/></div>
-    </main>
+    </div>
   )
 
   if (!order) return (
-    <main className="min-h-screen bg-green-50">
-      <Navbar />
+    <div className="page-shell min-h-screen"><PageBackground /><Navbar />
       <div className="text-center py-20 text-gray-400">Order not found.</div>
-    </main>
+    </div>
   )
 
   const isCancelled  = order.status === 'cancelled'
@@ -54,9 +53,10 @@ export default function OrderTrackingPage() {
     : null
 
   return (
-    <main className="min-h-screen bg-green-50">
+    <div className="page-shell min-h-screen">
+      <PageBackground />
       <Navbar />
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="relative z-10 max-w-2xl mx-auto px-4 py-8">
         <div className="card p-6 mb-6">
           <div className="flex items-start justify-between mb-2">
             <div>
@@ -78,17 +78,25 @@ export default function OrderTrackingPage() {
 
         {!isCancelled ? (
           <div className="card p-6 mb-6">
-            <h2 className="font-bold mb-6 text-gray-700">Live tracking</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-bold text-gray-700 dark:text-gray-300">Live tracking</h2>
+              {estimatedMin !== null && order.status !== 'delivered' && (
+                <span className="text-sm font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full">ETA: ~{estimatedMin} min</span>
+              )}
+            </div>
+            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 mb-6">
+              <div className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full transition-all duration-700" style={{ width: `${Math.max(10, ((currentStep + 1) / STATUS_STEPS.length) * 100)}%` }} />
+            </div>
             <div className="space-y-5">
               {STATUS_STEPS.map((step, idx) => {
                 const done = idx <= currentStep, active = idx === currentStep, Icon = step.icon
                 return (
                   <div key={step.key} className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${done ? 'bg-green-50 border-2 border-green-500' : 'bg-gray-50 border-2 border-gray-200'}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${done ? 'bg-green-50 dark:bg-green-900/40 border-2 border-green-500' : 'bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700'}`}>
                       <Icon size={18} className={done ? 'text-green-600' : 'text-gray-300'}/>
                     </div>
                     <div className="flex-1">
-                      <p className={`font-semibold ${done ? 'text-gray-900' : 'text-gray-300'}`}>{step.label}</p>
+                      <p className={`font-semibold ${done ? 'text-gray-900 dark:text-white' : 'text-gray-300'}`}>{step.label}</p>
                       {active && <p className="text-xs text-green-600 mt-0.5 animate-pulse">● In progress</p>}
                     </div>
                     {done && !active && <CheckCircle size={18} className="text-green-500"/>}
@@ -158,6 +166,6 @@ export default function OrderTrackingPage() {
           <Link href="/orders" className="btn-secondary flex-1 text-center">All orders</Link>
         </div>
       </div>
-    </main>
+    </div>
   )
 }

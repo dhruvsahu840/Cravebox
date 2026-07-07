@@ -47,8 +47,8 @@ export function ProductModal({ product, categories, onClose, onSave }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white border border-green-100 rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-xl">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="bg-white border border-green-100 rounded-t-2xl sm:rounded-2xl w-full max-w-xl max-h-[92vh] sm:max-h-[90vh] overflow-y-auto shadow-xl">
         <div className="flex items-center justify-between p-5 border-b border-green-100 sticky top-0 bg-white z-10">
           <h2 className="text-lg font-bold text-green-900">{product ? 'Edit product' : 'Add new product'}</h2>
           <button onClick={onClose} className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center hover:bg-green-100">
@@ -83,7 +83,7 @@ export function ProductModal({ product, categories, onClose, onSave }: Props) {
             <label className="text-sm font-semibold text-gray-600 mb-1 block">Description *</label>
             <textarea className="input resize-none h-20" placeholder="Short description" value={form.description} onChange={e => set('description', e.target.value)} />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-sm font-semibold text-gray-600 mb-1 block">Price (₹) *</label>
               <input type="number" className="input" placeholder="199" value={form.price} onChange={e => set('price', e.target.value)} />
@@ -105,7 +105,7 @@ export function ProductModal({ product, categories, onClose, onSave }: Props) {
             <input className="input" placeholder="spicy, cheese, popular" value={form.tags} onChange={e => set('tags', e.target.value)} />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {[
               { key: 'isVeg', label: '🟢 Vegetarian' }, { key: 'isBestseller', label: '🔥 Bestseller' },
               { key: 'isSpicy', label: '🌶️ Spicy' }, { key: 'isFeatured', label: '⭐ Featured' },

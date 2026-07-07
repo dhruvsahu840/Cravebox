@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { AdminSidebar } from '@/components/admin/AdminSidebar'
+import { AdminLayout } from '@/components/admin/AdminLayout'
 import { ArrowLeft, Loader2, MapPin, Phone, User, CreditCard } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
@@ -42,28 +42,25 @@ export default function AdminOrderDetail() {
   }
 
   if (loading) return (
-    <div className="flex min-h-screen bg-green-50">
-      <AdminSidebar />
-      <main className="flex-1 flex items-center justify-center"><Loader2 className="animate-spin text-green-500" size={32}/></main>
-    </div>
+    <AdminLayout>
+      <div className="flex items-center justify-center py-20"><Loader2 className="animate-spin text-green-500" size={32}/></div>
+    </AdminLayout>
   )
   if (!order) return (
-    <div className="flex min-h-screen bg-green-50">
-      <AdminSidebar /><main className="flex-1 flex items-center justify-center text-gray-400">Order not found</main>
-    </div>
+    <AdminLayout>
+      <div className="flex items-center justify-center py-20 text-gray-400">Order not found</div>
+    </AdminLayout>
   )
 
   return (
-    <div className="flex min-h-screen bg-green-50">
-      <AdminSidebar />
-      <main className="flex-1 p-6 overflow-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <Link href="/admin/orders" className="btn-ghost p-2"><ArrowLeft size={18}/></Link>
-          <div>
-            <h1 className="text-xl font-black text-green-900">Order #{order.orderNumber}</h1>
+    <AdminLayout>
+        <div className="flex flex-wrap items-center gap-3 mb-4 sm:mb-6">
+          <Link href="/admin/orders" className="btn-ghost p-2 shrink-0"><ArrowLeft size={18}/></Link>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg sm:text-xl font-black text-green-900 truncate">Order #{order.orderNumber}</h1>
             <p className="text-gray-400 text-sm">{new Date(order.createdAt).toLocaleString()}</p>
           </div>
-          <span className={`ml-auto text-xs font-bold px-3 py-1.5 rounded-full border ${STATUS_COLOR[order.status]}`}>{order.status.replace(/_/g, ' ')}</span>
+          <span className={`text-xs font-bold px-3 py-1.5 rounded-full border shrink-0 ${STATUS_COLOR[order.status]}`}>{order.status.replace(/_/g, ' ')}</span>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -110,7 +107,7 @@ export default function AdminOrderDetail() {
 
             <div className="card p-5">
               <h2 className="font-bold text-gray-700 mb-4">Assign delivery agent</h2>
-              <div className="grid grid-cols-2 gap-3 mb-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <input className="input text-sm" placeholder="Agent name" value={agent.name} onChange={e => setAgent(a => ({ ...a, name: e.target.value }))} />
                 <input className="input text-sm" placeholder="Agent phone" value={agent.phone} onChange={e => setAgent(a => ({ ...a, phone: e.target.value }))} />
               </div>
@@ -161,7 +158,6 @@ export default function AdminOrderDetail() {
             </div>
           </div>
         </div>
-      </main>
-    </div>
+    </AdminLayout>
   )
 }

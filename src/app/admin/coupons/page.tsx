@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { AdminSidebar } from '@/components/admin/AdminSidebar'
+import { AdminLayout } from '@/components/admin/AdminLayout'
 import { Plus, Trash2, ToggleRight, ToggleLeft, Loader2, Ticket } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -64,12 +64,10 @@ export default function AdminCoupons() {
   const set = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }))
 
   return (
-    <div className="flex min-h-screen bg-green-50">
-      <AdminSidebar />
-      <main className="flex-1 p-6 overflow-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-black text-green-900 flex items-center gap-2"><Ticket size={22} className="text-green-600" /> Coupons</h1>
-          <button onClick={() => setShowForm(!showForm)} className="btn-primary flex items-center gap-2 text-sm">
+    <AdminLayout>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl font-black text-green-900 flex items-center gap-2"><Ticket size={22} className="text-green-600" /> Coupons</h1>
+          <button onClick={() => setShowForm(!showForm)} className="btn-primary flex items-center justify-center gap-2 text-sm w-full sm:w-auto">
             <Plus size={16} /> Add coupon
           </button>
         </div>
@@ -78,7 +76,7 @@ export default function AdminCoupons() {
         {showForm && (
           <div className="card p-5 mb-6 border-green-200">
             <h2 className="font-bold text-green-900 mb-4">New coupon</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-4">
               <div>
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">Code *</label>
                 <input className="input text-sm font-mono uppercase" placeholder="SAVE20" value={form.code} onChange={e => set('code', e.target.value.toUpperCase())} />
@@ -122,7 +120,8 @@ export default function AdminCoupons() {
 
         {/* Table */}
         <div className="card overflow-hidden border-green-100">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[500px]">
             <thead>
               <tr className="border-b border-green-100 text-gray-500 text-xs uppercase bg-green-50">
                 <th className="px-5 py-3 text-left">Code</th>
@@ -170,8 +169,8 @@ export default function AdminCoupons() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
-      </main>
-    </div>
+    </AdminLayout>
   )
 }

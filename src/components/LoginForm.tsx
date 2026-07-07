@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { Logo } from '@/components/shared/Logo'
+import { ThemeToggle } from '@/components/shared/ThemeToggle'
 
 
 export default function LoginForm() {
@@ -26,24 +28,23 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center px-4">
+    <div className="page-shell min-h-screen flex items-center justify-center px-4 relative">
+      <div className="absolute top-4 right-4"><ThemeToggle /></div>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 text-3xl font-black text-green-900">
-            🌿 Crave<span className="text-green-600">Box</span>
-          </Link>
-          <p className="text-gray-400 mt-2">Sign in to your account</p>
+          <Logo size="lg" />
+          <p className="text-gray-400 dark:text-gray-500 mt-4">Sign in to your account</p>
         </div>
 
-        <div className="card p-8 border-green-100">
+        <div className="card p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Email</label>
+              <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">Email</label>
               <input type="email" className="input" placeholder="you@example.com"
                 value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} autoFocus />
             </div>
             <div>
-              <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Password</label>
+              <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">Password</label>
               <div className="relative">
                 <input type={showPw ? 'text' : 'password'} className="input pr-11" placeholder="••••••••"
                   value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} />
@@ -58,14 +59,14 @@ export default function LoginForm() {
               {loading ? 'Signing in…' : 'Sign in'}
             </button>
           </form>
-          <p className="text-center text-gray-400 text-sm mt-6">
+          <p className="text-center text-gray-400 dark:text-gray-500 text-sm mt-6">
             No account?{' '}
             <Link href="/auth/register" className="text-green-600 hover:text-green-700 font-semibold">Create one</Link>
           </p>
         </div>
 
-        <div className="mt-4 p-4 bg-white border border-green-100 rounded-xl text-xs text-gray-400 text-center">
-          <p className="font-semibold text-gray-500 mb-1">Admin access</p>
+        <div className="mt-4 p-4 card text-xs text-gray-400 dark:text-gray-500 text-center">
+          <p className="font-semibold text-gray-500 dark:text-gray-400 mb-1">Admin access</p>
           <p>Register using the email set in <code className="text-green-600">ADMIN_EMAIL</code> env var</p>
         </div>
       </div>

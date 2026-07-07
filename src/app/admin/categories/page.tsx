@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { AdminSidebar } from '@/components/admin/AdminSidebar'
+import { AdminLayout } from '@/components/admin/AdminLayout'
 import { Plus, Pencil, Trash2, Loader2, ToggleRight, ToggleLeft, Check, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -55,18 +55,16 @@ export default function AdminCategories() {
   }
 
   return (
-    <div className="flex min-h-screen bg-green-50">
-      <AdminSidebar />
-      <main className="flex-1 p-6 overflow-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-black text-green-900">Categories</h1>
-          <button onClick={() => setAdding(true)} className="btn-primary flex items-center gap-2 text-sm">
+    <AdminLayout>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl font-black text-green-900">Categories</h1>
+          <button onClick={() => setAdding(true)} className="btn-primary flex items-center justify-center gap-2 text-sm w-full sm:w-auto">
             <Plus size={18}/> Add category
           </button>
         </div>
 
         {adding && (
-          <div className="card p-4 mb-6 flex items-center gap-3">
+          <div className="card p-4 mb-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <input autoFocus className="input flex-1 text-sm py-2" placeholder="Category name e.g. Pizza, Burger..." value={newName} onChange={e => setNewName(e.target.value)} onKeyDown={e => e.key === 'Enter' && createCategory()} />
             <button onClick={createCategory} disabled={saving} className="btn-primary py-2 px-4 flex items-center gap-1 text-sm">
               {saving ? <Loader2 size={14} className="animate-spin"/> : <Check size={16}/>} Save
@@ -76,12 +74,13 @@ export default function AdminCategories() {
         )}
 
         <div className="card overflow-hidden">
+          <div className="overflow-x-auto">
           {loading ? (
             <div className="flex justify-center py-12"><Loader2 className="animate-spin text-green-400" size={28}/></div>
           ) : categories.length === 0 ? (
             <div className="text-center py-12 text-gray-400">No categories yet. Add one above.</div>
           ) : (
-            <table className="w-full">
+            <table className="w-full min-w-[400px]">
               <thead>
                 <tr className="border-b border-green-100 text-gray-400 text-xs uppercase bg-green-50">
                   <th className="px-5 py-3 text-left">Name</th>
@@ -119,8 +118,8 @@ export default function AdminCategories() {
               </tbody>
             </table>
           )}
+          </div>
         </div>
-      </main>
-    </div>
+    </AdminLayout>
   )
 }
