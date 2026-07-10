@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { getSettingsSnapshot } from '@/store/settingsStore'
 
 export interface CartItem {
   _id: string
@@ -87,8 +88,15 @@ export const useCart = create<CartStore>()(
 
       totalItems: () => get().items.reduce((s, i) => s + i.qty, 0),
       totalPrice: () => get().items.reduce((s, i) => s + i.price * i.qty, 0),
-      deliveryFee: () => get().totalPrice() >= 299 ? 0 : 40,
-      tax: () => Math.round(get().totalPrice() * 0.05),
+      deliveryFee: () => {
+        const sub = get().totalPrice()
+        const { deliveryFee, freeDeliveryMin } = getSettingsSnapshot()
+        return sub >= freeDeliveryMin ? 0 : deliveryFee
+      },
+      tax: () => {
+        const { taxRate } = getSettingsSnapshot()
+        return Math.round(get().totalPrice() * taxRate)
+      },
       grandTotal: () =>
         get().totalPrice() +
         get().deliveryFee() +

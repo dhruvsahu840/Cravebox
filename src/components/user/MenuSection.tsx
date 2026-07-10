@@ -6,6 +6,7 @@ import { useWishlist } from '@/store/wishlistStore'
 import { ProductDetailModal, MenuProduct } from '@/components/user/ProductDetailModal'
 import { EmptyState } from '@/components/shared/EmptyState'
 import Image from 'next/image'
+import { fuzzyScore } from '@/lib/fuzzySearch'
 import toast from 'react-hot-toast'
 
 const EMOJI: Record<string, string> = {
@@ -67,7 +68,13 @@ export function MenuSection() {
   const displayed = products
     .filter(p => !filterVeg || p.isVeg)
     .filter(p => !filterBest || p.isBestseller)
+    .filter(p => !search || fuzzyScore(search, `${p.name} ${p.description} ${(p.tags || []).join(' ')}`) > 0)
     .sort((a, b) => {
+      if (search) {
+        const sa = fuzzyScore(search, `${a.name} ${a.description}`)
+        const sb = fuzzyScore(search, `${b.name} ${b.description}`)
+        if (sa !== sb) return sb - sa
+      }
       if (sortBy === 'price-low') return (a.discountedPrice || a.price) - (b.discountedPrice || b.price)
       if (sortBy === 'price-high') return (b.discountedPrice || b.price) - (a.discountedPrice || a.price)
       if (sortBy === 'rating') return (b.ratings?.avg ?? 0) - (a.ratings?.avg ?? 0)
@@ -167,6 +174,13 @@ export function MenuSection() {
                     <div className="p-4 pb-2 pointer-events-none">
                       <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">{product.name}</h3>
                       <p className="text-gray-500 text-xs mb-2 line-clamp-2">{product.description}</p>
+                      {(product.calories || product.allergens?.length) && (
+                        <p className="text-[10px] text-gray-400 mt-1">
+                          {product.calories && `${product.calories} cal`}
+                          {product.calories && product.allergens?.length ? ' · ' : ''}
+                          {product.allergens?.length ? `Contains: ${product.allergens.join(', ')}` : ''}
+                        </p>
+                      )}
                       {(product.ratings?.count ?? 0) > 0 && (
                         <div className="flex items-center gap-1 mb-2">
                           <Star size={12} className="text-yellow-400 fill-yellow-400" />

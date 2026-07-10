@@ -1,15 +1,17 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Package, ShoppingBag, Users, Tag, BarChart3, LogOut, Ticket, X } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingBag, Users, Tag, BarChart3, LogOut, Ticket, X, Settings } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 
 const NAV = [
   { href: '/admin/dashboard',  label: 'Dashboard',  icon: LayoutDashboard },
   { href: '/admin/orders',     label: 'Orders',     icon: ShoppingBag },
+  { href: '/admin/kanban',     label: 'Live Board', icon: BarChart3 },
   { href: '/admin/products',   label: 'Products',   icon: Package },
   { href: '/admin/categories', label: 'Categories', icon: Tag },
   { href: '/admin/coupons',    label: 'Coupons',    icon: Ticket },
+  { href: '/admin/settings',   label: 'Settings',   icon: Settings },
   { href: '/admin/customers',  label: 'Customers',  icon: Users },
 ]
 

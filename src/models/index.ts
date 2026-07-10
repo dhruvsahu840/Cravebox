@@ -16,6 +16,8 @@ export interface IUser extends Document {
     pincode: string
     isDefault: boolean
   }[]
+  loyaltyPoints: number
+  referralCode: string
   isActive: boolean
   createdAt: Date
 }
@@ -34,6 +36,8 @@ const UserSchema = new Schema<IUser>({
     pincode:   { type: String, required: true },
     isDefault: { type: Boolean, default: false },
   }],
+  loyaltyPoints: { type: Number, default: 0 },
+  referralCode:  { type: String, unique: true, sparse: true, default: undefined },
   isActive: { type: Boolean, default: true },
 }, { timestamps: true })
 
@@ -69,6 +73,9 @@ export interface IProduct extends Document {
   isFeatured: boolean
   isBestseller: boolean
   isSpicy: boolean
+  calories?: number
+  allergens?: string[]
+  isCombo: boolean
   customizations?: {
     name: string
     options: { label: string; price: number }[]
@@ -91,6 +98,9 @@ const ProductSchema = new Schema<IProduct>({
   isFeatured:       { type: Boolean, default: false },
   isBestseller:     { type: Boolean, default: false },
   isSpicy:          { type: Boolean, default: false },
+  calories:         { type: Number },
+  allergens:        [{ type: String }],
+  isCombo:          { type: Boolean, default: false },
   customizations:   [{
     name:    String,
     options: [{ label: String, price: Number }],
@@ -139,8 +149,9 @@ export interface IOrder extends Document {
     location?: { lat: number; lng: number }
   }
   estimatedDelivery?: Date
+  scheduledFor?: Date
   specialInstructions?: string
-  rating?: { score: number; comment: string }
+  rating?: { score: number; comment: string; deliveryScore?: number }
   createdAt: Date
 }
 
@@ -173,8 +184,9 @@ const OrderSchema = new Schema<IOrder>({
   },
   deliveryAgent:        { name: String, phone: String, location: { lat: Number, lng: Number } },
   estimatedDelivery:    Date,
+  scheduledFor:         Date,
   specialInstructions:  String,
-  rating:               { score: Number, comment: String },
+  rating:               { score: Number, comment: String, deliveryScore: Number },
 }, { timestamps: true })
 
 OrderSchema.pre('save', async function (next) {
@@ -227,3 +239,29 @@ const CouponSchema = new Schema<ICoupon>({
 }, { timestamps: true })
 
 export const Coupon = mongoose.models.Coupon || mongoose.model<ICoupon>('Coupon', CouponSchema)
+
+// ─── Newsletter ────────────────────────────────────────────────────────────────
+const NewsletterSchema = new Schema({
+  email: { type: String, required: true, unique: true, lowercase: true },
+}, { timestamps: true })
+
+export const Newsletter = mongoose.models.Newsletter || mongoose.model('Newsletter', NewsletterSchema)
+
+// ─── Store Settings (singleton) ────────────────────────────────────────────────
+export interface IStoreSettings extends Document {
+  key: string
+  taxRate: number
+  deliveryFee: number
+  freeDeliveryMin: number
+  minOrder: number
+}
+
+const StoreSettingsSchema = new Schema<IStoreSettings>({
+  key:             { type: String, default: 'store', unique: true },
+  taxRate:         { type: Number, default: 0.05, min: 0, max: 0.3 },
+  deliveryFee:     { type: Number, default: 40, min: 0, max: 500 },
+  freeDeliveryMin: { type: Number, default: 299, min: 0 },
+  minOrder:        { type: Number, default: 99, min: 0 },
+}, { timestamps: true })
+
+export const StoreSettings = mongoose.models.StoreSettings || mongoose.model<IStoreSettings>('StoreSettings', StoreSettingsSchema)

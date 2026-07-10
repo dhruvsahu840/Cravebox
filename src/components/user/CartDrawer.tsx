@@ -6,40 +6,57 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { getDeliveryEstimate } from '@/lib/delivery'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { FreeDeliveryBar } from '@/components/user/FreeDeliveryBar'
+import { GuestCheckoutModal } from '@/components/user/GuestCheckoutModal'
+import { STORE } from '@/lib/config'
+import { useSettings } from '@/store/settingsStore'
 import toast from 'react-hot-toast'
 
 export function CartDrawer() {
   const [open, setOpen]           = useState(false)
   const [loading, setLoading]     = useState(false)
   const [payMethod, setPayMethod] = useState<'razorpay' | 'cod'>('razorpay')
+  const [payDisplay, setPayDisplay] = useState<'card' | 'upi' | 'cod'>('card')
   const [address, setAddress]     = useState({ line1: '', city: '', pincode: '' })
   const [couponCode, setCoupon]   = useState('')
   const [couponData, setCouponData] = useState<any>(null)
   const [applyingCoupon, setApplying] = useState(false)
   const [savedAddresses, setSavedAddresses] = useState<any[]>([])
+  const [guestOpen, setGuestOpen] = useState(false)
+  const [scheduleLater, setScheduleLater] = useState(false)
+  const [scheduledFor, setScheduledFor] = useState('')
+  const [loyaltyPoints, setLoyaltyPoints] = useState(0)
+  const [useLoyalty, setUseLoyalty] = useState(false)
   const { data: session }         = useSession()
   const router                    = useRouter()
   const { items, updateQty, removeItem, clearCart, totalPrice, deliveryFee, tax } = useCart()
+  const { taxRate, minOrder, freeDeliveryMin } = useSettings(s => s.settings)
+  const fetchSettings = useSettings(s => s.fetchSettings)
 
   useEffect(() => {
-    const open = () => setOpen(true)
+    const open = () => { setOpen(true); fetchSettings() }
     document.addEventListener('open-cart', open)
     return () => document.removeEventListener('open-cart', open)
-  }, [])
+  }, [fetchSettings])
 
   useEffect(() => {
-    if (session) {
-      fetch('/api/profile').then(r => r.json()).then(d => {
-        if (d.user?.addresses?.length) {
-          setSavedAddresses(d.user.addresses)
-          const def = d.user.addresses.find((a: any) => a.isDefault) || d.user.addresses[0]
-          if (def && !address.line1) setAddress({ line1: def.line1, city: def.city, pincode: def.pincode })
-        }
-      })
-    }
-  }, [session])
+    if (!session?.user?.id) return
+    fetch('/api/profile').then(r => r.json()).then(d => {
+      if (d.user?.addresses?.length) {
+        setSavedAddresses(d.user.addresses)
+        const def = d.user.addresses.find((a: any) => a.isDefault) || d.user.addresses[0]
+        if (def && !address.line1) setAddress({ line1: def.line1, city: def.city, pincode: def.pincode })
+      }
+      if (d.user?.loyaltyPoints) setLoyaltyPoints(d.user.loyaltyPoints)
+    }).catch(() => {})
+    fetch('/api/orders?limit=1').then(r => r.json()).then(d => {
+      if ((d.total ?? d.orders?.length ?? 0) === 0 && !couponData) {
+        setCoupon(STORE.firstOrderCoupon)
+      }
+    }).catch(() => {})
+  }, [session?.user?.id])
 
-  const discount   = couponData?.discount || 0
+  const discount   = (couponData?.discount || 0) + (useLoyalty ? Math.min(loyaltyPoints / 10, totalPrice() * 0.2) : 0)
   const grandTotal = totalPrice() + deliveryFee() + tax() - discount
   const eta = getDeliveryEstimate(items.reduce((s, i) => s + i.qty, 0))
 
@@ -59,17 +76,20 @@ export function CartDrawer() {
   const removeCoupon = () => { setCouponData(null); setCoupon('') }
 
   const placeOrder = async () => {
-    if (!session) { router.push('/auth/login'); return }
+    if (!session) { setGuestOpen(true); return }
     if (!address.line1 || !address.city || !address.pincode) { toast.error('Fill in delivery address'); return }
     if (!items.length) { toast.error('Cart is empty'); return }
+    if (totalPrice() < minOrder) { toast.error(`Minimum order is ₹${minOrder}`); return }
     setLoading(true)
     try {
       const orderRes = await fetch('/api/orders', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: items.map(i => ({ product: i._id, qty: i.qty })),
+          items: items.map(i => ({ product: i._id, qty: i.qty, customizations: i.customizations })),
           address, paymentMethod: payMethod,
-          couponCode: couponData?.coupon?.code,
+          couponCode: couponData?.coupon?.code || (couponCode || undefined),
+          scheduledFor: scheduleLater && scheduledFor ? scheduledFor : undefined,
+          useLoyalty,
         }),
       })
       const orderData = await orderRes.json()
@@ -224,29 +244,52 @@ export function CartDrawer() {
                 </div>
               </div>
 
+              {/* Schedule */}
+              <div>
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 cursor-pointer">
+                  <input type="checkbox" checked={scheduleLater} onChange={e => setScheduleLater(e.target.checked)} className="rounded" />
+                  Schedule for later
+                </label>
+                {scheduleLater && (
+                  <input type="datetime-local" className="input text-sm py-2" value={scheduledFor} onChange={e => setScheduledFor(e.target.value)} min={new Date().toISOString().slice(0, 16)} />
+                )}
+              </div>
+
               {/* Payment */}
               <div>
                 <p className="text-sm font-semibold text-gray-700 mb-2">Payment method</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {(['razorpay', 'cod'] as const).map(m => (
-                    <button key={m} onClick={() => setPayMethod(m)}
-                      className={`p-3 rounded-xl border text-sm font-semibold transition-all ${payMethod === m ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 text-gray-500 hover:border-green-300'}`}>
-                      {m === 'razorpay' ? '💳 Online' : '💵 Cash'}
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    { key: 'card' as const, label: '💳 Card', method: 'razorpay' as const },
+                    { key: 'upi' as const, label: '📱 UPI', method: 'razorpay' as const },
+                    { key: 'cod' as const, label: '💵 Cash', method: 'cod' as const },
+                  ]).map(m => (
+                    <button key={m.key} onClick={() => { setPayDisplay(m.key); setPayMethod(m.method) }}
+                      className={`p-3 rounded-xl border text-xs font-semibold transition-all ${payDisplay === m.key ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 text-gray-500 hover:border-green-300'}`}>
+                      {m.label}
                     </button>
                   ))}
                 </div>
               </div>
+
+              {loyaltyPoints >= 100 && (
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input type="checkbox" checked={useLoyalty} onChange={e => setUseLoyalty(e.target.checked)} />
+                  <span className="text-gray-600 dark:text-gray-300">Use {Math.min(loyaltyPoints, 100)} loyalty points (−₹{Math.min(loyaltyPoints / 10, totalPrice() * 0.2).toFixed(0)})</span>
+                </label>
+              )}
             </>
           )}
         </div>
 
         {/* Footer */}
         {items.length > 0 && (
-          <div className="p-5 border-t border-green-100 bg-green-50 space-y-3">
+          <div className="p-5 border-t border-green-100 bg-green-50 dark:bg-gray-800/50 space-y-3">
+            <FreeDeliveryBar subtotal={totalPrice()} />
             <div className="space-y-1.5 text-sm text-gray-500">
               <div className="flex justify-between"><span>Subtotal</span><span className="text-gray-700">₹{totalPrice()}</span></div>
               <div className="flex justify-between"><span>Delivery</span><span className={deliveryFee() === 0 ? 'text-green-600 font-semibold' : 'text-gray-700'}>{deliveryFee() === 0 ? 'FREE' : `₹${deliveryFee()}`}</span></div>
-              <div className="flex justify-between"><span>Tax (5%)</span><span className="text-gray-700">₹{tax()}</span></div>
+              <div className="flex justify-between"><span>Tax ({Math.round(taxRate * 1000) / 10}%)</span><span className="text-gray-700">₹{tax()}</span></div>
               {discount > 0 && <div className="flex justify-between text-green-600 font-semibold"><span>Discount</span><span>−₹{discount}</span></div>}
             </div>
             <div className="flex justify-between font-black text-lg border-t border-green-200 pt-3 text-green-900">
@@ -257,11 +300,12 @@ export function CartDrawer() {
               {loading ? 'Processing…' : `Place Order · ₹${grandTotal}`}
             </button>
             {deliveryFee() > 0 && (
-              <p className="text-center text-xs text-gray-400">Add ₹{299 - totalPrice()} more for free delivery</p>
+              <p className="text-center text-xs text-gray-400">Add ₹{freeDeliveryMin - totalPrice()} more for free delivery</p>
             )}
           </div>
         )}
       </div>
+      <GuestCheckoutModal open={guestOpen} onClose={() => setGuestOpen(false)} onSuccess={() => placeOrder()} />
     </>
   )
 }

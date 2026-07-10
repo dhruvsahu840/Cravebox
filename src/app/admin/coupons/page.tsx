@@ -157,11 +157,11 @@ export default function AdminCoupons() {
                   </td>
                   <td className="px-5 py-4 text-center">
                     <button onClick={() => toggle(c._id, c.isActive)}>
-                      {c.isActive ? <ToggleRight size={24} className="text-green-500" /> : <ToggleLeft size={24} className="text-gray-300" />}
+                      {c.isActive ? <ToggleRight size={24} className="text-green-500" /> : <ToggleLeft size={24} className="text-gray-400" />}
                     </button>
                   </td>
                   <td className="px-5 py-4 text-right">
-                    <button onClick={() => del(c._id)} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors ml-auto">
+                    <button onClick={() => del(c._id)} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors ml-auto">
                       <Trash2 size={14} />
                     </button>
                   </td>

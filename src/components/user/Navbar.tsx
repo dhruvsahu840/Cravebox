@@ -81,6 +81,8 @@ export function Navbar() {
             { href: '/offers', label: '🏷️ Offers' },
             { href: '/orders', label: '📦 My Orders' },
             { href: '/profile', label: '👤 Profile' },
+            { href: '/faq', label: '❓ FAQ' },
+            { href: '/blog', label: '📖 Blog' },
             { href: '/about', label: 'ℹ️ About' },
           ].map(l => (
             <Link key={l.href} href={l.href} className="block btn-ghost py-2.5 text-sm font-semibold" onClick={() => setOpen(false)}>{l.label}</Link>

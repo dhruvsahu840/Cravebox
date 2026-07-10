@@ -21,15 +21,16 @@ export default function RegisterPage() {
     if (form.password !== form.confirm) { toast.error('Passwords do not match'); return }
 
     setLoading(true)
+    const email = form.email.toLowerCase().trim()
     const res  = await fetch('/api/auth/register', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: form.name, email: form.email, phone: form.phone, password: form.password }),
+      body: JSON.stringify({ name: form.name, email, phone: form.phone, password: form.password }),
     })
     const data = await res.json()
-    if (!res.ok) { toast.error(data.error); setLoading(false); return }
+    if (!res.ok) { toast.error(data.error || 'Registration failed'); setLoading(false); return }
 
-    const login = await signIn('credentials', { email: form.email, password: form.password, redirect: false })
+    const login = await signIn('credentials', { email, password: form.password, redirect: false })
     setLoading(false)
     if (login?.ok) {
       toast.success('Account created! Welcome 🎉')

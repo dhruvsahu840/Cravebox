@@ -65,7 +65,7 @@ export default function AdminCustomers() {
                   <td className="px-5 py-4 text-gray-400 text-xs hidden lg:table-cell">{new Date(user.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                   <td className="px-5 py-4 text-center">
                     <button onClick={() => toggleActive(user._id, user.isActive)}>
-                      {user.isActive ? <ToggleRight size={24} className="text-green-500"/> : <ToggleLeft size={24} className="text-gray-300"/>}
+                      {user.isActive ? <ToggleRight size={24} className="text-green-500"/> : <ToggleLeft size={24} className="text-gray-400"/>}
                     </button>
                   </td>
                 </tr>

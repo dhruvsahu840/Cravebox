@@ -85,6 +85,64 @@
   .badge-out       { @apply bg-purple-50  text-purple-700  border border-purple-200; }
   .badge-delivered { @apply bg-green-50   text-green-700   border border-green-200; }
   .badge-cancelled { @apply bg-red-50     text-red-700     border border-red-200; }
+
+  /* Admin + invoice: always light, readable surfaces (dark mode is user-store only) */
+  .admin-shell {
+    @apply text-gray-900;
+    color-scheme: light;
+  }
+
+  .dark .admin-shell {
+    @apply text-gray-900;
+  }
+
+  .admin-shell .card,
+  .admin-shell .card-solid {
+    @apply bg-white border-green-100/80 text-gray-900 shadow-card;
+  }
+
+  .dark .admin-shell .card,
+  .dark .admin-shell .card-solid {
+    @apply bg-white border-green-100/80 text-gray-900;
+  }
+
+  .admin-shell .input {
+    @apply bg-white border-gray-200 text-gray-900 placeholder-gray-400;
+  }
+
+  .dark .admin-shell .input {
+    @apply bg-white border-gray-200 text-gray-900 placeholder-gray-500;
+  }
+
+  .admin-shell .btn-secondary {
+    @apply bg-white text-green-700 border-green-200;
+  }
+
+  .admin-shell .btn-ghost {
+    @apply text-gray-600 hover:text-green-700 hover:bg-green-50;
+  }
+
+  .admin-shell thead tr {
+    @apply text-gray-600;
+  }
+
+  .admin-shell h2 {
+    @apply text-gray-800;
+  }
+
+  .invoice-shell {
+    @apply bg-white text-gray-900;
+    color-scheme: light;
+  }
+
+  .dark .invoice-shell {
+    @apply bg-white text-gray-900;
+  }
+
+  .dark .invoice-shell .text-gray-400,
+  .dark .invoice-shell .text-gray-500 {
+    @apply text-gray-600;
+  }
 }
 
 @keyframes marquee {

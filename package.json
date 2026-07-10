@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3000",
+    "dev:clean": "npx kill-port 3000 3001 3002 3003 3004 && next dev -p 3000",
+    "db:consolidate": "npx tsx scripts/consolidate-db.ts",
+    "db:images": "npx tsx scripts/add-product-images.ts",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

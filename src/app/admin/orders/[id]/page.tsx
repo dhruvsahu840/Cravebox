@@ -66,7 +66,7 @@ export default function AdminOrderDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-5">
             <div className="card p-5">
-              <h2 className="font-bold text-gray-700 mb-4">Order items</h2>
+              <h2 className="font-bold text-gray-800 mb-4">Order items</h2>
               <div className="space-y-3">
                 {order.items.map((item: any, i: number) => (
                   <div key={i} className="flex justify-between items-center">
@@ -78,10 +78,10 @@ export default function AdminOrderDetail() {
                   </div>
                 ))}
               </div>
-              <div className="border-t border-green-100 mt-4 pt-4 space-y-1.5 text-sm text-gray-500">
+              <div className="border-t border-green-100 mt-4 pt-4 space-y-1.5 text-sm text-gray-600">
                 <div className="flex justify-between"><span>Subtotal</span><span>₹{order.subtotal}</span></div>
                 <div className="flex justify-between"><span>Delivery fee</span><span>{order.deliveryFee === 0 ? 'FREE' : `₹${order.deliveryFee}`}</span></div>
-                <div className="flex justify-between"><span>Tax (5%)</span><span>₹{order.tax}</span></div>
+                <div className="flex justify-between"><span>Tax{order.subtotal ? ` (${Math.round((order.tax / order.subtotal) * 1000) / 10}%)` : ''}</span><span>₹{order.tax}</span></div>
                 {order.discount > 0 && <div className="flex justify-between text-green-600"><span>Discount</span><span>-₹{order.discount}</span></div>}
                 <div className="flex justify-between font-black text-base text-green-900 border-t border-green-100 pt-2 mt-1">
                   <span>Total</span><span className="text-green-600">₹{order.total}</span>
@@ -98,7 +98,7 @@ export default function AdminOrderDetail() {
                     <div>
                       <span className="font-semibold capitalize text-gray-800">{h.status.replace(/_/g, ' ')}</span>
                       {h.note && <span className="text-gray-400 ml-2">— {h.note}</span>}
-                      <p className="text-gray-300 text-xs">{new Date(h.time).toLocaleString()}</p>
+                      <p className="text-gray-500 text-xs">{new Date(h.time).toLocaleString()}</p>
                     </div>
                   </div>
                 ))}
@@ -134,13 +134,13 @@ export default function AdminOrderDetail() {
             <div className="card p-5">
               <h2 className="font-bold text-gray-700 mb-4">Payment</h2>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-gray-400">Method</span><span className="capitalize font-semibold text-gray-800">{order.payment.method}</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">Method</span><span className="capitalize font-semibold text-gray-800">{order.payment.method}</span></div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Status</span>
+                  <span className="text-gray-600">Status</span>
                   <span className={`font-bold ${order.payment.status === 'paid' ? 'text-green-600' : order.payment.status === 'failed' ? 'text-red-500' : 'text-yellow-600'}`}>{order.payment.status}</span>
                 </div>
                 {order.payment.razorpayPaymentId && (
-                  <div className="flex justify-between"><span className="text-gray-400">Razorpay ID</span><span className="font-mono text-xs text-gray-500">{order.payment.razorpayPaymentId.slice(-8)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-600">Razorpay ID</span><span className="font-mono text-xs text-gray-600">{order.payment.razorpayPaymentId.slice(-8)}</span></div>
                 )}
               </div>
             </div>

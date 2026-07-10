@@ -21,10 +21,14 @@ export default function LoginForm() {
     e.preventDefault()
     if (!form.email || !form.password) { toast.error('Fill in all fields'); return }
     setLoading(true)
-    const res = await signIn('credentials', { email: form.email, password: form.password, redirect: false })
+    const res = await signIn('credentials', {
+      email: form.email.toLowerCase().trim(),
+      password: form.password,
+      redirect: false,
+    })
     setLoading(false)
     if (res?.ok) { toast.success('Welcome back! 👋'); router.push(callbackUrl); router.refresh() }
-    else toast.error('Invalid email or password')
+    else toast.error(res?.error === 'CredentialsSignin' ? 'Invalid email or password' : 'Sign in failed. Try again.')
   }
 
   return (

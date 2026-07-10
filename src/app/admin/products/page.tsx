@@ -124,11 +124,11 @@ export default function AdminProducts() {
                   <td className="px-5 py-4 text-gray-500 text-sm hidden md:table-cell">{product.category?.name}</td>
                   <td className="px-5 py-4 text-right">
                     <span className="font-bold text-green-600">₹{product.discountedPrice || product.price}</span>
-                    {product.discountedPrice && <span className="text-gray-300 text-xs line-through ml-1">₹{product.price}</span>}
+                    {product.discountedPrice && <span className="text-gray-500 text-xs line-through ml-1">₹{product.price}</span>}
                   </td>
                   <td className="px-5 py-4 text-center">
                     <button onClick={() => toggleAvailability(product._id, product.isAvailable)}>
-                      {product.isAvailable ? <ToggleRight size={24} className="text-green-500"/> : <ToggleLeft size={24} className="text-gray-300"/>}
+                      {product.isAvailable ? <ToggleRight size={24} className="text-green-500"/> : <ToggleLeft size={24} className="text-gray-400"/>}
                     </button>
                   </td>
                   <td className="px-5 py-4 text-right">

@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { connectDB } from '@/lib/db'
-import { Order } from '@/models'
+import { Order, User } from '@/models'
+import { STORE } from '@/lib/config'
 
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
@@ -39,6 +40,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       if (body.status) {
         order.status = body.status
         order.statusHistory.push({ status: body.status, time: new Date(), note: body.note || '' })
+        if (body.status === 'delivered') {
+          const user = await User.findById(order.user)
+          if (user) {
+            user.loyaltyPoints = (user.loyaltyPoints || 0) + Math.floor(order.total / 100) * STORE.loyaltyPointsPer100
+            await user.save()
+          }
+        }
       }
       if (body.deliveryAgent) order.deliveryAgent = body.deliveryAgent
       if (body.deliveryLocation) {

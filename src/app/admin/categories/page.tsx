@@ -104,7 +104,7 @@ export default function AdminCategories() {
                     <td className="px-5 py-4 text-gray-400 text-sm hidden md:table-cell font-mono">{cat.slug}</td>
                     <td className="px-5 py-4 text-center">
                       <button onClick={() => toggleActive(cat._id, cat.isActive)}>
-                        {cat.isActive ? <ToggleRight size={24} className="text-green-500"/> : <ToggleLeft size={24} className="text-gray-300"/>}
+                        {cat.isActive ? <ToggleRight size={24} className="text-green-500"/> : <ToggleLeft size={24} className="text-gray-400"/>}
                       </button>
                     </td>
                     <td className="px-5 py-4 text-right">

@@ -1,11 +1,14 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { CheckCircle, Clock, ChefHat, Bike, Package, XCircle, RefreshCw, Star } from 'lucide-react'
+import { CheckCircle, Clock, ChefHat, Bike, Package, XCircle, RefreshCw, Star, Loader2 } from 'lucide-react'
 import { Navbar } from '@/components/user/Navbar'
 import { PageBackground } from '@/components/user/PageBackground'
 import { ReviewForm } from '@/components/user/Reviews'
+import { LiveDeliveryMap } from '@/components/user/LiveDeliveryMap'
 import Link from 'next/link'
+import { FileText } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 const STATUS_STEPS = [
   { key: 'pending',          label: 'Order placed',      icon: Package },
@@ -20,6 +23,7 @@ export default function OrderTrackingPage() {
   const [order, setOrder]     = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [reviewedItems, setReviewedItems] = useState<string[]>([])
+  const [cancelling, setCancelling] = useState(false)
 
   const fetchOrder = async () => {
     const res  = await fetch(`/api/orders/${id}`)
@@ -30,9 +34,27 @@ export default function OrderTrackingPage() {
 
   useEffect(() => {
     fetchOrder()
-    const interval = setInterval(fetchOrder, 15000)
+    const interval = setInterval(fetchOrder, 5000)
     return () => clearInterval(interval)
   }, [id])
+
+  const cancelOrder = async () => {
+    if (!confirm('Are you sure you want to cancel this order?')) return
+    setCancelling(true)
+    const res = await fetch(`/api/orders/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cancel: true }),
+    })
+    setCancelling(false)
+    if (res.ok) {
+      toast.success('Order cancelled')
+      fetchOrder()
+    } else {
+      const d = await res.json()
+      toast.error(d.error || 'Could not cancel order')
+    }
+  }
 
   if (loading) return (
     <div className="page-shell min-h-screen"><PageBackground /><Navbar />
@@ -74,9 +96,21 @@ export default function OrderTrackingPage() {
               <Clock size={16}/> Estimated delivery: ~{estimatedMin} min
             </div>
           )}
+          {order.status === 'pending' && (
+            <button
+              onClick={cancelOrder}
+              disabled={cancelling}
+              className="mt-4 w-full btn-secondary border-red-200 text-red-600 hover:bg-red-50 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold"
+            >
+              {cancelling ? <Loader2 size={16} className="animate-spin" /> : <XCircle size={16} />}
+              Cancel order
+            </button>
+          )}
         </div>
 
         {!isCancelled ? (
+          <>
+          <LiveDeliveryMap status={order.status} />
           <div className="card p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-bold text-gray-700 dark:text-gray-300">Live tracking</h2>
@@ -105,6 +139,7 @@ export default function OrderTrackingPage() {
               })}
             </div>
           </div>
+          </>
         ) : (
           <div className="card p-6 mb-6 border-red-200">
             <div className="flex items-center gap-3 text-red-600">
@@ -161,9 +196,12 @@ export default function OrderTrackingPage() {
           </div>
         </div>
 
-        <div className="flex gap-3">
-          <Link href="/" className="btn-primary flex-1 text-center">Order more</Link>
-          <Link href="/orders" className="btn-secondary flex-1 text-center">All orders</Link>
+        <div className="flex gap-3 flex-wrap">
+          <Link href="/" className="btn-primary flex-1 text-center min-w-[120px]">Order more</Link>
+          <Link href="/orders" className="btn-secondary flex-1 text-center min-w-[120px]">All orders</Link>
+          <Link href={`/orders/${order._id}/invoice`} className="btn-secondary flex items-center justify-center gap-1 px-4">
+            <FileText size={16} /> Invoice
+          </Link>
         </div>
       </div>
     </div>

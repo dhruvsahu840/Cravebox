@@ -38,19 +38,19 @@ export default function AdminDashboard() {
                   <s.icon size={18} className={s.color} />
                 </div>
                 <div className="text-xl sm:text-2xl font-black text-gray-900">{s.value}</div>
-                <div className="text-gray-400 text-sm mt-1">{s.label}</div>
+                <div className="text-gray-500 text-sm mt-1">{s.label}</div>
               </div>
             ))}
           </div>
 
           <div className="card p-4 sm:p-6 mb-4 sm:mb-6">
-            <h2 className="font-bold text-gray-700 mb-4 text-sm sm:text-base">Revenue — last 7 days</h2>
+            <h2 className="font-bold text-gray-800 mb-4 text-sm sm:text-base">Revenue — last 7 days</h2>
             <div className="w-full min-w-0">
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={data.revenueByDay}>
-                  <XAxis dataKey="_id" stroke="#d1d5db" tick={{ fill: '#9ca3af', fontSize: 11 }} />
-                  <YAxis stroke="#d1d5db" tick={{ fill: '#9ca3af', fontSize: 11 }} width={40} />
-                  <Tooltip contentStyle={{ background: '#fff', border: '1px solid #bbf7d0', borderRadius: 8 }} />
+                  <XAxis dataKey="_id" stroke="#9ca3af" tick={{ fill: '#6b7280', fontSize: 11 }} />
+                  <YAxis stroke="#9ca3af" tick={{ fill: '#6b7280', fontSize: 11 }} width={40} />
+                  <Tooltip contentStyle={{ background: '#fff', color: '#111827', border: '1px solid #bbf7d0', borderRadius: 8 }} labelStyle={{ color: '#374151' }} itemStyle={{ color: '#16a34a' }} />
                   <Bar dataKey="revenue" fill="#16a34a" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -59,7 +59,7 @@ export default function AdminDashboard() {
 
           <div className="card p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-              <h2 className="font-bold text-gray-700 text-sm sm:text-base">Recent orders</h2>
+              <h2 className="font-bold text-gray-800 text-sm sm:text-base">Recent orders</h2>
               <Link href="/admin/orders" className="text-green-600 text-sm hover:underline font-medium shrink-0">View all →</Link>
             </div>
             <div className="space-y-2">
@@ -75,12 +75,12 @@ export default function AdminDashboard() {
                       </div>
                       <div className="min-w-0">
                         <p className="font-semibold text-sm text-gray-900 truncate">#{order.orderNumber}</p>
-                        <p className="text-gray-400 text-xs truncate">{order.user?.name}</p>
+                        <p className="text-gray-500 text-xs truncate">{order.user?.name}</p>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
                       <p className="font-bold text-green-600 text-sm">₹{order.total}</p>
-                      <p className="text-gray-300 text-xs">{new Date(order.createdAt).toLocaleTimeString()}</p>
+                      <p className="text-gray-500 text-xs">{new Date(order.createdAt).toLocaleTimeString()}</p>
                     </div>
                   </Link>
                 )

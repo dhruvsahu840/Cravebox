@@ -17,6 +17,8 @@ export interface MenuProduct {
   isVeg: boolean
   isBestseller: boolean
   isSpicy: boolean
+  calories?: number
+  allergens?: string[]
   ratings?: { avg: number; count: number }
   category?: { _id: string; name: string }
   tags?: string[]
@@ -51,6 +53,7 @@ export function ProductDetailModal({ product, onClose }: Props) {
   const [activeImage, setActiveImage] = useState(0)
   const [mounted, setMounted] = useState(false)
   const [imgError, setImgError] = useState(false)
+  const [frequent, setFrequent] = useState<any[]>([])
 
   const customizationKey = buildCustomizationKey(selections)
   const cartItem = product
@@ -65,6 +68,7 @@ export function ProductDetailModal({ product, onClose }: Props) {
     setActiveImage(0)
     setImgError(false)
     setQty(1)
+    fetch(`/api/products/frequently-bought?productId=${product._id}`).then(r => r.json()).then(d => setFrequent(d.products || []))
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = '' }
   }, [product?._id])
@@ -255,6 +259,21 @@ export function ProductDetailModal({ product, onClose }: Props) {
               </button>
             </div>
           </div>
+
+          {frequent.length > 0 && (
+            <div>
+              <h3 className="font-bold text-gray-700 dark:text-gray-300 text-sm mb-3">Frequently bought together</h3>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {frequent.map(p => (
+                  <button key={p._id} type="button" onClick={() => addItem({ _id: p._id, name: p.name, price: p.discountedPrice || p.price, image: p.images?.[0] || '' })}
+                    className="shrink-0 card p-2 text-left w-28 hover:border-green-400">
+                    <p className="text-xs font-bold line-clamp-1">{p.name}</p>
+                    <p className="text-green-600 text-xs font-black">₹{p.discountedPrice || p.price}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div>
             <h3 className="font-bold text-gray-700 dark:text-gray-300 text-sm mb-3">Customer reviews</h3>

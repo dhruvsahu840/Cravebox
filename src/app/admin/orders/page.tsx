@@ -44,6 +44,10 @@ export default function AdminOrders() {
   return (
     <AdminLayout>
         <h1 className="text-xl sm:text-2xl font-black text-green-900 mb-4 sm:mb-6">Orders</h1>
+        <div className="flex gap-2 mb-4">
+          <a href="/api/admin/orders/export" className="btn-secondary text-sm px-4 py-2">📥 Export CSV</a>
+          <Link href="/admin/kanban" className="btn-primary text-sm px-4 py-2">Live Board</Link>
+        </div>
 
         <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
           {STATUSES.map(s => (
@@ -63,7 +67,7 @@ export default function AdminOrders() {
           <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[600px]">
             <thead>
-              <tr className="border-b border-green-100 text-gray-400 text-xs uppercase bg-green-50">
+              <tr className="border-b border-green-100 text-gray-600 text-xs uppercase bg-green-50">
                 <th className="px-5 py-3 text-left">Order</th>
                 <th className="px-5 py-3 text-left hidden lg:table-cell">Customer</th>
                 <th className="px-5 py-3 text-left hidden md:table-cell">Items</th>
@@ -103,7 +107,7 @@ export default function AdminOrders() {
                     )}
                   </td>
                   <td className="px-5 py-4">
-                    <Link href={`/admin/orders/${order._id}`} className="text-gray-300 hover:text-green-600 transition-colors"><ChevronRight size={16}/></Link>
+                    <Link href={`/admin/orders/${order._id}`} className="text-gray-500 hover:text-green-600 transition-colors"><ChevronRight size={16}/></Link>
                   </td>
                 </tr>
               ))}

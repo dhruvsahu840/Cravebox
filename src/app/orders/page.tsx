@@ -26,6 +26,9 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [reordering, setReordering] = useState<string | null>(null)
+  const [filter, setFilter] = useState('all')
+  const [sort, setSort] = useState<'newest' | 'oldest' | 'amount'>('newest')
+  const [cancelling, setCancelling] = useState<string | null>(null)
 
   useEffect(() => {
     if (status === 'unauthenticated') { router.push('/auth/login'); return }
@@ -51,20 +54,61 @@ export default function OrdersPage() {
     } else toast.error(d.error || 'Could not reorder — items may be unavailable')
   }
 
+  const cancelOrder = async (e: React.MouseEvent, orderId: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!confirm('Cancel this order?')) return
+    setCancelling(orderId)
+    const res = await fetch(`/api/orders/${orderId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cancel: true }),
+    })
+    setCancelling(null)
+    if (res.ok) {
+      setOrders(os => os.map(o => o._id === orderId ? { ...o, status: 'cancelled' } : o))
+      toast.success('Order cancelled')
+    } else {
+      const d = await res.json()
+      toast.error(d.error || 'Could not cancel')
+    }
+  }
+
+  const filtered = orders
+    .filter(o => filter === 'all' || o.status === filter)
+    .sort((a, b) => {
+      if (sort === 'amount') return b.total - a.total
+      if (sort === 'oldest') return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    })
+
   return (
-    <div className="page-shell min-h-screen">
+    <div className="page-shell min-h-screen pb-20">
       <PageBackground />
       <Navbar />
       <div className="relative z-10 max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-extrabold text-green-900 dark:text-white mb-6">My Orders</h1>
+        <h1 className="text-2xl font-extrabold text-green-900 dark:text-white mb-4">My Orders</h1>
+
+        <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
+          {['all', 'pending', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'].map(s => (
+            <button key={s} onClick={() => setFilter(s)} className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-bold capitalize ${filter === s ? 'bg-green-600 text-white' : 'bg-white dark:bg-gray-800 border border-green-200 dark:border-gray-700 text-gray-500'}`}>
+              {s.replace(/_/g, ' ')}
+            </button>
+          ))}
+        </div>
+        <select value={sort} onChange={e => setSort(e.target.value as any)} className="input text-sm py-2 mb-4 w-full sm:w-auto">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="amount">Highest amount</option>
+        </select>
 
         {loading ? (
           <div className="flex justify-center py-16"><Loader2 className="animate-spin text-green-500" size={32}/></div>
-        ) : orders.length === 0 ? (
-          <EmptyState emoji="📦" title="No orders yet" description="Time to order something delicious!" actionLabel="Browse menu" actionHref="/" />
+        ) : filtered.length === 0 ? (
+          <EmptyState emoji="📦" title="No orders found" description="Try a different filter" actionLabel="Clear filter" onAction={() => setFilter('all')} />
         ) : (
           <div className="space-y-4">
-            {orders.map((order: any) => {
+            {filtered.map((order: any) => {
               const meta = STATUS_META[order.status] || STATUS_META.pending
               const Icon = meta.icon
               return (
@@ -95,6 +139,16 @@ export default function OrdersPage() {
                     >
                       {reordering === order._id ? <Loader2 size={14} className="animate-spin" /> : <RotateCcw size={14} />}
                       Reorder
+                    </button>
+                  )}
+                  {order.status === 'pending' && (
+                    <button
+                      onClick={e => cancelOrder(e, order._id)}
+                      disabled={cancelling === order._id}
+                      className="mt-3 w-full text-sm py-2 flex items-center justify-center gap-2 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 font-semibold"
+                    >
+                      {cancelling === order._id ? <Loader2 size={14} className="animate-spin" /> : <XCircle size={14} />}
+                      Cancel order
                     </button>
                   )}
                 </div>

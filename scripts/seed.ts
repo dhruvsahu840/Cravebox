@@ -6,6 +6,7 @@
  */
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
+import { imageForSlug } from './product-images'
 dotenv.config({ path: '.env.local' })
 
 const MONGO_URI = process.env.MONGODB_URI!
@@ -66,7 +67,7 @@ async function seed() {
     { name: 'Cold Coffee',            slug: 'cold-coffee',            description: 'Chilled blended coffee with vanilla ice cream',                      price: 79,  category: catMap.drinks,   isVeg: true,                                         sortOrder: 1, ratings: { avg: 4.5, count: 50 } },
     { name: 'Mango Shake',            slug: 'mango-shake',            description: 'Fresh Alphonso mango, chilled milk, a hint of cardamom',            price: 69,  category: catMap.drinks,   isVeg: true,                       isFeatured: true,  sortOrder: 2, ratings: { avg: 4.8, count: 65 } },
     { name: 'Masala Chaas',           slug: 'masala-chaas',           description: 'Chilled spiced buttermilk with roasted cumin and mint',             price: 49,  category: catMap.drinks,   isVeg: true,                                         sortOrder: 3, ratings: { avg: 4.2, count: 30 } },
-  ].map(p => ({ ...p, isAvailable: true, images: [] }))
+  ].map(p => ({ ...p, isAvailable: true, images: imageForSlug(p.slug) }))
 
   await Product.insertMany(products)
   console.log(`✅ Created ${products.length} products`)

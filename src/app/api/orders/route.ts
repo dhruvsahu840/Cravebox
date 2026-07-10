@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { connectDB } from '@/lib/db'
-import { Order, Product, Coupon } from '@/models'
+import { Order, Product, Coupon, User } from '@/models'
+import { STORE } from '@/lib/config'
+import { getStoreSettings, calcDeliveryFee, calcTax } from '@/lib/storeSettings'
 
 // GET /api/orders — user gets their own, admin gets all
 export async function GET(req: NextRequest) {
@@ -42,7 +44,7 @@ export async function POST(req: NextRequest) {
 
   try {
     await connectDB()
-    const { items, address, paymentMethod, specialInstructions, couponCode } = await req.json()
+    const { items, address, paymentMethod, specialInstructions, couponCode, scheduledFor, useLoyalty } = await req.json()
 
     if (!items?.length) return NextResponse.json({ error: 'Cart is empty' }, { status: 400 })
     if (!address)       return NextResponse.json({ error: 'Delivery address is required' }, { status: 400 })
@@ -66,8 +68,10 @@ export async function POST(req: NextRequest) {
     })
 
     const subtotal    = verifiedItems.reduce((s: number, i: any) => s + i.price * i.qty, 0)
-    const deliveryFee = subtotal >= 299 ? 0 : 40
-    const tax         = Math.round(subtotal * 0.05)
+    const settings    = await getStoreSettings()
+    if (subtotal < settings.minOrder) return NextResponse.json({ error: `Minimum order is ₹${settings.minOrder}` }, { status: 400 })
+    const deliveryFee = calcDeliveryFee(subtotal, settings)
+    const tax         = calcTax(subtotal, settings)
 
     // Verify coupon server-side — never trust a client-sent discount amount
     let discount   = 0
@@ -81,7 +85,19 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    if (useLoyalty) {
+      const user = await User.findById(session.user.id)
+      if (user && user.loyaltyPoints >= 100) {
+        const loyaltyDiscount = Math.min(Math.floor(user.loyaltyPoints / 10), Math.round(subtotal * 0.2))
+        discount += loyaltyDiscount
+        user.loyaltyPoints -= loyaltyDiscount * 10
+        await user.save()
+      }
+    }
+
     const total = subtotal + deliveryFee + tax - discount
+
+    const estimated = scheduledFor ? new Date(scheduledFor) : new Date(Date.now() + 35 * 60 * 1000)
 
     const order = await Order.create({
       user:                session.user.id,
@@ -93,12 +109,13 @@ export async function POST(req: NextRequest) {
       discount,
       total,
       specialInstructions,
+      scheduledFor:        scheduledFor ? new Date(scheduledFor) : undefined,
       payment: {
         method: paymentMethod || 'cod',
         status: paymentMethod === 'cod' ? 'pending' : 'pending',
       },
       statusHistory: [{ status: 'pending', time: new Date(), note: 'Order placed' }],
-      estimatedDelivery: new Date(Date.now() + 35 * 60 * 1000),
+      estimatedDelivery: estimated,
     })
 
     if (appliedCoupon) {

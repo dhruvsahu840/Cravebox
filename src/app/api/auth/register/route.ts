@@ -32,6 +32,9 @@ export async function POST(req: NextRequest) {
       user: { id: user._id, name: user.name, email: user.email },
     }, { status: 201 })
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    if (err.code === 11000) {
+      return NextResponse.json({ error: 'Email already registered' }, { status: 409 })
+    }
+    return NextResponse.json({ error: err.message || 'Registration failed' }, { status: 500 })
   }
 }

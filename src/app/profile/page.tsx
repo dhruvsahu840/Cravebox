@@ -83,6 +83,12 @@ export default function ProfilePage() {
       <div className="relative z-10 max-w-2xl mx-auto px-4 py-8">
         <h1 className="text-2xl font-extrabold text-green-900 dark:text-white mb-6">My Profile</h1>
 
+        <div className="card p-5 mb-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
+          <p className="text-xs font-bold text-green-600 uppercase tracking-wide mb-1">Loyalty points</p>
+          <p className="text-3xl font-black text-green-700 dark:text-green-300">{user?.loyaltyPoints || 0} pts</p>
+          <p className="text-xs text-gray-500 mt-1">100 points = ₹10 off · Earn 10 pts per ₹100 spent</p>
+        </div>
+
         <div className="card p-5 mb-6">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-14 h-14 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center">

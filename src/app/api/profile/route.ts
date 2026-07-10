@@ -6,12 +6,15 @@ import { User } from '@/models'
 
 export async function GET() {
   const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
     await connectDB()
-    const user = await User.findById(session.user.id).select('-password').lean()
-    if (!user) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    let user = await User.findById(session.user.id).select('-password').lean()
+    if (!user && session.user.email) {
+      user = await User.findOne({ email: session.user.email.toLowerCase() }).select('-password').lean()
+    }
+    if (!user) return NextResponse.json({ error: 'User not found. Please sign in again.' }, { status: 401 })
     return NextResponse.json({ user })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
