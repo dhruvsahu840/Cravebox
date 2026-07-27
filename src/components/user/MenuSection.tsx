@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import Image from 'next/image'
 import { fuzzyScore } from '@/lib/fuzzySearch'
 import toast from 'react-hot-toast'
+import { hasSizeOptions, minProductPrice } from '@/lib/productPricing'
 
 const EMOJI: Record<string, string> = {
   pizza: '🍕', burger: '🍔', sandwich: '🥪', maggi: '🍜', drinks: '☕',
@@ -52,6 +53,10 @@ export function MenuSection() {
 
   const handleAdd = (e: React.MouseEvent, product: MenuProduct) => {
     e.stopPropagation()
+    if (hasSizeOptions(product.customizations)) {
+      setSelected(product)
+      return
+    }
     const price = product.discountedPrice || product.price
     addItem({ _id: product._id, name: product.name, price, image: product.images?.[0] || '' })
     toast.success(`${product.name} added!`, { icon: '🛒' })
@@ -128,7 +133,8 @@ export function MenuSection() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {displayed.map(product => {
               const qty   = getQty(product._id)
-              const price = product.discountedPrice || product.price
+              const price = minProductPrice(product)
+              const sized = hasSizeOptions(product.customizations)
               return (
                 <div
                   key={product._id}
@@ -192,18 +198,21 @@ export function MenuSection() {
                   </div>
                   <div className="px-4 pb-4 flex items-center justify-between">
                       <div>
-                        <span className="text-green-600 font-black text-lg">₹{price}</span>
-                        {product.discountedPrice && (
+                        <span className="text-green-600 font-black text-lg">
+                          {sized ? <span className="text-xs font-bold text-gray-400 mr-1">from</span> : null}
+                          ₹{price}
+                        </span>
+                        {!sized && product.discountedPrice && (
                           <span className="text-gray-400 text-xs line-through ml-1.5">₹{product.price}</span>
                         )}
                       </div>
-                      {qty === 0 ? (
+                      {qty === 0 || sized ? (
                         <button
                           type="button"
                           onClick={e => handleAdd(e, product)}
                           className="btn-primary py-1.5 px-4 text-sm flex items-center gap-1 shadow-sm"
                         >
-                          <Plus size={14} /> Add
+                          <Plus size={14} /> {sized ? 'Select' : 'Add'}
                         </button>
                       ) : (
                         <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-2 py-1">

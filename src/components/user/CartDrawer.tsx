@@ -113,7 +113,7 @@ export function CartDrawer() {
         key:      process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount:   rzpData.amount,
         currency: rzpData.currency,
-        name:     'CraveBox',
+        name:     'Lifepizza',
         description: `Order #${orderData.order.orderNumber}`,
         order_id: rzpData.razorpayOrderId,
         prefill: { name: session.user.name, email: session.user.email },
@@ -170,23 +170,26 @@ export function CartDrawer() {
           ) : (
             <div className="space-y-3">
               {items.map(item => (
-                <div key={item._id} className="flex items-center gap-3 p-3 bg-green-50 rounded-xl border border-green-100">
+                <div key={`${item._id}-${item.customizations || ''}`} className="flex items-center gap-3 p-3 bg-green-50 rounded-xl border border-green-100">
                   <div className="w-11 h-11 bg-white rounded-xl border border-green-100 flex items-center justify-center text-2xl flex-shrink-0">
                     {emojiFor(item.name)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-gray-900 truncate">{item.name}</p>
+                    {item.customizations && (
+                      <p className="text-xs text-gray-500 truncate">{item.customizations}</p>
+                    )}
                     <p className="text-green-600 font-bold text-sm">₹{item.price * item.qty}</p>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <button onClick={() => updateQty(item._id, item.qty - 1)} className="w-7 h-7 bg-white border border-green-200 rounded-lg flex items-center justify-center hover:bg-green-600 hover:text-white hover:border-green-600 transition-colors">
+                    <button onClick={() => updateQty(item._id, item.qty - 1, item.customizations)} className="w-7 h-7 bg-white border border-green-200 rounded-lg flex items-center justify-center hover:bg-green-600 hover:text-white hover:border-green-600 transition-colors">
                       <Minus size={12} />
                     </button>
                     <span className="w-6 text-center text-sm font-bold">{item.qty}</span>
-                    <button onClick={() => updateQty(item._id, item.qty + 1)} className="w-7 h-7 bg-white border border-green-200 rounded-lg flex items-center justify-center hover:bg-green-600 hover:text-white hover:border-green-600 transition-colors">
+                    <button onClick={() => updateQty(item._id, item.qty + 1, item.customizations)} className="w-7 h-7 bg-white border border-green-200 rounded-lg flex items-center justify-center hover:bg-green-600 hover:text-white hover:border-green-600 transition-colors">
                       <Plus size={12} />
                     </button>
-                    <button onClick={() => removeItem(item._id)} className="w-7 h-7 ml-0.5 text-gray-300 hover:text-red-400 transition-colors flex items-center justify-center">
+                    <button onClick={() => removeItem(item._id, item.customizations)} className="w-7 h-7 ml-0.5 text-gray-300 hover:text-red-400 transition-colors flex items-center justify-center">
                       <Trash2 size={13} />
                     </button>
                   </div>

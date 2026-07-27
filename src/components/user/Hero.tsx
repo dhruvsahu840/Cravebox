@@ -42,7 +42,7 @@ export function Hero() {
         <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold text-white mb-3 sm:mb-4 leading-[1.1] tracking-tight">
           Hunger?{' '}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-200">
-            CraveBox
+            Lifepizza
           </span>
           <br className="hidden sm:block" />
           <span className="text-3xl sm:text-4xl md:text-5xl font-bold text-white/90"> delivers in 30 mins</span>

@@ -1,10 +1,30 @@
 'use client'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { X, Upload, Loader2, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Image from 'next/image'
+import { buildSizeCustomizations, getSizeGroup, PIZZA_SIZES } from '@/lib/productPricing'
 
 interface Props { product?: any; categories: any[]; onClose: () => void; onSave: (product: any) => void }
+
+function isPizzaCategory(categories: any[], categoryId: string) {
+  const cat = categories.find((c: any) => c._id === categoryId)
+  if (!cat) return false
+  const slug = (cat.slug || '').toLowerCase()
+  const name = (cat.name || '').toLowerCase()
+  return slug === 'pizza' || name.includes('pizza')
+}
+
+function initialSizePrices(product?: any) {
+  const sizeGroup = getSizeGroup(product?.customizations)
+  const get = (label: string) =>
+    sizeGroup?.options?.find((o: any) => o.label === label)?.price
+  return {
+    Personal: get('Personal') ?? product?.price ?? '',
+    Medium: get('Medium') ?? '',
+    Large: get('Large') ?? '',
+  }
+}
 
 export function ProductModal({ product, categories, onClose, onSave }: Props) {
   const [form, setForm] = useState({
@@ -15,10 +35,14 @@ export function ProductModal({ product, categories, onClose, onSave }: Props) {
     isSpicy: product?.isSpicy ?? false, isFeatured: product?.isFeatured ?? false,
     isAvailable: product?.isAvailable ?? true, tags: product?.tags?.join(', ') || '',
   })
+  const [sizePrices, setSizePrices] = useState<Record<string, string | number>>(initialSizePrices(product))
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving]       = useState(false)
 
+  const isPizza = useMemo(() => isPizzaCategory(categories, form.category), [categories, form.category])
+
   const set = (key: string, val: any) => setForm(f => ({ ...f, [key]: val }))
+  const setSize = (label: string, val: string) => setSizePrices(s => ({ ...s, [label]: val }))
 
   const uploadImage = async (file: File) => {
     setUploading(true)
@@ -33,10 +57,35 @@ export function ProductModal({ product, categories, onClose, onSave }: Props) {
   const removeImage = (idx: number) => setForm(f => ({ ...f, images: f.images.filter((_: string, i: number) => i !== idx) }))
 
   const handleSubmit = async () => {
-    if (!form.name || !form.price || !form.category) { toast.error('Name, price, and category are required'); return }
+    if (!form.name || !form.category) { toast.error('Name and category are required'); return }
+
+    let payload: any = {
+      ...form,
+      tags: form.tags.split(',').map((t: string) => t.trim()).filter(Boolean),
+    }
+
+    if (isPizza) {
+      const personal = Number(sizePrices.Personal)
+      const medium = Number(sizePrices.Medium)
+      const large = Number(sizePrices.Large)
+      if (!personal || !medium || !large) {
+        toast.error('Set Personal, Medium, and Large prices')
+        return
+      }
+      payload.price = personal
+      payload.discountedPrice = null
+      payload.customizations = buildSizeCustomizations(personal, medium, large)
+    } else {
+      if (!form.price) { toast.error('Name, price, and category are required'); return }
+      payload.price = Number(form.price)
+      payload.discountedPrice = form.discountedPrice ? Number(form.discountedPrice) : undefined
+      // Clear pizza sizes if product was moved out of pizza category
+      if (getSizeGroup(product?.customizations)) {
+        payload.customizations = []
+      }
+    }
+
     setSaving(true)
-    const payload = { ...form, price: Number(form.price), discountedPrice: form.discountedPrice ? Number(form.discountedPrice) : undefined,
-      tags: form.tags.split(',').map((t: string) => t.trim()).filter(Boolean) }
     const url = product ? `/api/products/${product._id}` : '/api/products'
     const method = product ? 'PUT' : 'POST'
     const res  = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
@@ -83,16 +132,7 @@ export function ProductModal({ product, categories, onClose, onSave }: Props) {
             <label className="text-sm font-semibold text-gray-600 mb-1 block">Description *</label>
             <textarea className="input resize-none h-20" placeholder="Short description" value={form.description} onChange={e => set('description', e.target.value)} />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="text-sm font-semibold text-gray-600 mb-1 block">Price (₹) *</label>
-              <input type="number" className="input" placeholder="199" value={form.price} onChange={e => set('price', e.target.value)} />
-            </div>
-            <div>
-              <label className="text-sm font-semibold text-gray-600 mb-1 block">Discounted price (₹)</label>
-              <input type="number" className="input" placeholder="Optional" value={form.discountedPrice} onChange={e => set('discountedPrice', e.target.value)} />
-            </div>
-          </div>
+
           <div>
             <label className="text-sm font-semibold text-gray-600 mb-1 block">Category *</label>
             <select className="input" value={form.category} onChange={e => set('category', e.target.value)}>
@@ -100,6 +140,42 @@ export function ProductModal({ product, categories, onClose, onSave }: Props) {
               {categories.map((c: any) => <option key={c._id} value={c._id}>{c.name}</option>)}
             </select>
           </div>
+
+          {isPizza ? (
+            <div className="rounded-xl border border-green-200 bg-green-50/50 p-4 space-y-3">
+              <div>
+                <p className="text-sm font-bold text-green-800">Pizza sizes & prices *</p>
+                <p className="text-xs text-gray-500 mt-0.5">Customers will choose Personal, Medium, or Large</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {PIZZA_SIZES.map(label => (
+                  <div key={label}>
+                    <label className="text-sm font-semibold text-gray-600 mb-1 block">{label} (₹)</label>
+                    <input
+                      type="number"
+                      min={1}
+                      className="input"
+                      placeholder={label === 'Personal' ? '199' : label === 'Medium' ? '279' : '349'}
+                      value={sizePrices[label]}
+                      onChange={e => setSize(label, e.target.value)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-semibold text-gray-600 mb-1 block">Price (₹) *</label>
+                <input type="number" className="input" placeholder="199" value={form.price} onChange={e => set('price', e.target.value)} />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-600 mb-1 block">Discounted price (₹)</label>
+                <input type="number" className="input" placeholder="Optional" value={form.discountedPrice} onChange={e => set('discountedPrice', e.target.value)} />
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="text-sm font-semibold text-gray-600 mb-1 block">Tags (comma separated)</label>
             <input className="input" placeholder="spicy, cheese, popular" value={form.tags} onChange={e => set('tags', e.target.value)} />

@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     const base64 = `data:${file.type};base64,${buffer.toString('base64')}`
 
     const result = await cloudinary.uploader.upload(base64, {
-      folder:         'cravebox/products',
+      folder:         'lifepizza/products',
       transformation: [{ width: 800, height: 800, crop: 'fill', quality: 'auto' }],
     })
 

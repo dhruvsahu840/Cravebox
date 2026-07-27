@@ -29,7 +29,7 @@ export async function GET() {
     return new NextResponse(csv, {
       headers: {
         'Content-Type': 'text/csv',
-        'Content-Disposition': 'attachment; filename="cravebox-orders.csv"',
+        'Content-Disposition': 'attachment; filename="lifepizza-orders.csv"',
       },
     })
   } catch (err: any) {

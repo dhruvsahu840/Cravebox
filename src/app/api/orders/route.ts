@@ -5,6 +5,7 @@ import { connectDB } from '@/lib/db'
 import { Order, Product, Coupon, User } from '@/models'
 import { STORE } from '@/lib/config'
 import { getStoreSettings, calcDeliveryFee, calcTax } from '@/lib/storeSettings'
+import { hasSizeOptions, resolveUnitPrice } from '@/lib/productPricing'
 
 // GET /api/orders — user gets their own, admin gets all
 export async function GET(req: NextRequest) {
@@ -51,19 +52,25 @@ export async function POST(req: NextRequest) {
 
     // Verify products + calculate totals server-side (never trust client prices)
     const productIds = items.map((i: any) => i.product)
-    const products   = await Product.find({ _id: { $in: productIds } }).lean()
+    const products: any[] = await Product.find({ _id: { $in: productIds } }).lean()
 
     const verifiedItems = items.map((item: any) => {
-      const product = products.find((p: any) => p._id.toString() === item.product)
+      const product = products.find((p) => p._id.toString() === item.product)
       if (!product) throw new Error(`Product not found: ${item.product}`)
       if (!product.isAvailable) throw new Error(`${product.name} is currently unavailable`)
+
+      const customizations = item.customizations || ''
+      if (hasSizeOptions(product.customizations) && !/size\s*:/i.test(customizations)) {
+        throw new Error(`Please select a size for ${product.name}`)
+      }
+
       return {
         product: product._id,
         name:    product.name,
         image:   product.images?.[0] || '',
-        price:   product.discountedPrice || product.price,
+        price:   resolveUnitPrice(product, customizations),
         qty:     item.qty,
-        customizations: item.customizations || '',
+        customizations,
       }
     })
 

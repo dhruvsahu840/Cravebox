@@ -16,7 +16,7 @@ export function Logo({ size = 'md', showText = true, href = '/' }: LogoProps) {
     <div className="flex items-center gap-2.5 group">
       <Image
         src="/icon.svg"
-        alt="CraveBox"
+        alt="Lifepizza"
         width={px}
         height={px}
         className="rounded-lg shadow-sm group-hover:scale-105 transition-transform"
@@ -24,7 +24,7 @@ export function Logo({ size = 'md', showText = true, href = '/' }: LogoProps) {
       />
       {showText && (
         <span className={`font-extrabold text-green-900 dark:text-white tracking-tight ${size === 'sm' ? 'text-lg' : size === 'lg' ? 'text-2xl' : 'text-xl'}`}>
-          Crave<span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-500">Box</span>
+          Life<span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-500">pizza</span>
         </span>
       )}
     </div>

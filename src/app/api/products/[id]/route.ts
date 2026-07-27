@@ -23,7 +23,16 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   try {
     await connectDB()
     const body = await req.json()
-    const product = await Product.findByIdAndUpdate(params.id, body, { new: true })
+    const unset: Record<string, 1> = {}
+    if (body.discountedPrice === null || body.discountedPrice === '') {
+      delete body.discountedPrice
+      unset.discountedPrice = 1
+    }
+    const update =
+      Object.keys(unset).length > 0
+        ? { $set: body, $unset: unset }
+        : body
+    const product = await Product.findByIdAndUpdate(params.id, update, { new: true })
     if (!product) return NextResponse.json({ error: 'Not found' }, { status: 404 })
     return NextResponse.json({ product })
   } catch (err: any) {

@@ -12,7 +12,7 @@ const jakarta = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'CraveBox — Fresh Food Delivered Fast',
+  title: 'Lifepizza — Fresh Food Delivered Fast',
   description: 'Pizzas, Burgers, Sandwiches & Maggi delivered in 30 mins',
   icons: {
     icon: '/icon.svg',
@@ -20,19 +20,19 @@ export const metadata: Metadata = {
   },
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   openGraph: {
-    title: 'CraveBox — Fresh Food Delivered Fast',
+    title: 'Lifepizza — Fresh Food Delivered Fast',
     description: 'Order pizzas, burgers, sandwiches & maggi. Delivered in 30 mins · Bhopal',
-    siteName: 'CraveBox',
+    siteName: 'Lifepizza',
     images: [
-      { url: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1200&h=630&fit=crop&q=80', width: 1200, height: 630, alt: 'CraveBox — Fresh Food Delivery' },
-      { url: '/og-image.svg', width: 1200, height: 630, alt: 'CraveBox' },
+      { url: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1200&h=630&fit=crop&q=80', width: 1200, height: 630, alt: 'Lifepizza — Fresh Food Delivery' },
+      { url: '/og-image.svg', width: 1200, height: 630, alt: 'Lifepizza' },
     ],
     locale: 'en_IN',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'CraveBox — Fresh Food Delivered Fast',
+    title: 'Lifepizza — Fresh Food Delivered Fast',
     description: 'Order food online. 30-min delivery in Bhopal.',
     images: ['https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1200&q=80'],
   },

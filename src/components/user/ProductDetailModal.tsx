@@ -6,6 +6,12 @@ import Image from 'next/image'
 import { useCart } from '@/store/cartStore'
 import toast from 'react-hot-toast'
 import { ReviewsList } from '@/components/user/Reviews'
+import {
+  calcUnitPriceFromSelections,
+  getSizeGroup,
+  hasSizeOptions,
+  isSizeGroup,
+} from '@/lib/productPricing'
 
 export interface MenuProduct {
   _id: string
@@ -64,7 +70,12 @@ export function ProductDetailModal({ product, onClose }: Props) {
 
   useEffect(() => {
     if (!product) return
-    setSelections({})
+    const sizeGroup = getSizeGroup(product.customizations)
+    const defaults: Record<string, { label: string; price: number }> = {}
+    if (sizeGroup?.options?.[0]) {
+      defaults[sizeGroup.name] = sizeGroup.options[0]
+    }
+    setSelections(defaults)
     setActiveImage(0)
     setImgError(false)
     setQty(1)
@@ -80,15 +91,19 @@ export function ProductDetailModal({ product, onClose }: Props) {
 
   if (!mounted || !product) return null
 
-  const basePrice = product.discountedPrice || product.price
-  const extras = Object.values(selections).reduce((s, o) => s + o.price, 0)
-  const unitPrice = basePrice + extras
+  const needsSize = hasSizeOptions(product.customizations)
+  const sizeSelected = Object.keys(selections).some(k => isSizeGroup(k))
+  const unitPrice = calcUnitPriceFromSelections(product, selections)
   const lineTotal = unitPrice * qty
-  const discount = product.discountedPrice ? product.price - product.discountedPrice : 0
+  const discount = !needsSize && product.discountedPrice ? product.price - product.discountedPrice : 0
   const ratingCount = product.ratings?.count ?? 0
   const ratingAvg = product.ratings?.avg ?? 0
 
   const saveToCart = () => {
+    if (needsSize && !sizeSelected) {
+      toast.error('Please select a size')
+      return false
+    }
     const payload = {
       _id: product._id,
       name: product.name,
@@ -102,16 +117,17 @@ export function ProductDetailModal({ product, onClose }: Props) {
     } else {
       addItem(payload, qty)
     }
+    return true
   }
 
   const handleAddToCart = () => {
-    saveToCart()
+    if (!saveToCart()) return
     toast.success(`${product.name} added to cart!`, { icon: '🛒' })
     onClose()
   }
 
   const handleBuyNow = () => {
-    saveToCart()
+    if (!saveToCart()) return
     onClose()
     document.dispatchEvent(new CustomEvent('open-cart'))
   }
@@ -204,10 +220,13 @@ export function ProductDetailModal({ product, onClose }: Props) {
 
           {product.customizations?.map(group => (
             <div key={group.name}>
-              <p className="text-sm font-semibold text-gray-700 mb-2">{group.name}</p>
+              <p className="text-sm font-semibold text-gray-700 mb-2">
+                {group.name}{isSizeGroup(group.name) ? ' *' : ''}
+              </p>
               <div className="flex flex-wrap gap-2">
                 {group.options.map(opt => {
                   const selected = selections[group.name]?.label === opt.label
+                  const sizeAbs = isSizeGroup(group.name)
                   return (
                     <button
                       key={opt.label}
@@ -220,7 +239,11 @@ export function ProductDetailModal({ product, onClose }: Props) {
                       }`}
                     >
                       {opt.label}
-                      {opt.price > 0 && <span className="text-gray-400 ml-1">+₹{opt.price}</span>}
+                      {sizeAbs ? (
+                        <span className="text-gray-400 ml-1">₹{opt.price}</span>
+                      ) : (
+                        opt.price > 0 && <span className="text-gray-400 ml-1">+₹{opt.price}</span>
+                      )}
                     </button>
                   )
                 })}
@@ -231,7 +254,7 @@ export function ProductDetailModal({ product, onClose }: Props) {
           <div className="flex items-center justify-between p-4 bg-green-50 rounded-2xl border border-green-100">
             <div>
               <span className="text-2xl font-black text-green-600">₹{unitPrice}</span>
-              {product.discountedPrice && (
+              {!needsSize && product.discountedPrice && (
                 <span className="text-gray-400 text-sm line-through ml-2">₹{product.price}</span>
               )}
               {discount > 0 && (

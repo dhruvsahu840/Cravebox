@@ -14,6 +14,6 @@ export const useTheme = create<ThemeStore>()(
       toggle: () => set({ dark: !get().dark }),
       setDark: (v) => set({ dark: v }),
     }),
-    { name: 'cravebox-theme' }
+    { name: 'lifepizza-theme' }
   )
 )

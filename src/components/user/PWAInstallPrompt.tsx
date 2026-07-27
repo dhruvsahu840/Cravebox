@@ -27,7 +27,7 @@ export function PWAInstallPrompt() {
   return (
     <div className="fixed bottom-24 md:bottom-4 left-4 right-4 md:left-auto md:right-20 md:w-80 z-40 card p-4 shadow-2xl animate-fade-up">
       <button onClick={() => { setShow(false); localStorage.setItem('pwa-dismissed', '1') }} className="absolute top-2 right-2 text-gray-400"><X size={16} /></button>
-      <p className="font-bold text-gray-900 dark:text-white text-sm mb-1">Install CraveBox</p>
+      <p className="font-bold text-gray-900 dark:text-white text-sm mb-1">Install Lifepizza</p>
       <p className="text-xs text-gray-500 mb-3">Add to home screen for app-like experience</p>
       <button onClick={install} className="btn-primary w-full text-sm flex items-center justify-center gap-2 py-2">
         <Download size={16} /> Install app

@@ -31,7 +31,7 @@ export function AdminSidebar({ isOpen = false, onClose }: AdminSidebarProps) {
     >
       <div className="p-5 border-b border-green-100 flex items-start justify-between">
         <div>
-          <div className="text-lg font-black text-green-900">🌿 Crave<span className="text-green-600">Box</span></div>
+          <div className="text-lg font-black text-green-900">🍕 Life<span className="text-green-600">pizza</span></div>
           <div className="text-xs text-gray-400 mt-0.5 font-medium">Admin Panel</div>
         </div>
         <button

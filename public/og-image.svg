@@ -8,9 +8,9 @@
       <stop offset="100%" stop-color="#059669"/>
     </linearGradient>
   </defs>
-  <text x="600" y="260" text-anchor="middle" font-family="system-ui,sans-serif" font-size="96" font-weight="800" fill="#ffffff">CraveBox</text>
+  <text x="600" y="260" text-anchor="middle" font-family="system-ui,sans-serif" font-size="96" font-weight="800" fill="#ffffff">Lifepizza</text>
   <text x="600" y="340" text-anchor="middle" font-family="system-ui,sans-serif" font-size="36" font-weight="500" fill="#bbf7d0">Fresh food delivered in 30 mins · Bhopal</text>
   <text x="600" y="420" text-anchor="middle" font-family="system-ui,sans-serif" font-size="28" fill="#86efac">🍕 Pizzas · 🍔 Burgers · 🥪 Sandwiches · 🍜 Maggi</text>
   <rect x="450" y="480" width="300" height="56" rx="28" fill="#16a34a"/>
-  <text x="600" y="517" text-anchor="middle" font-family="system-ui,sans-serif" font-size="22" font-weight="700" fill="#ffffff">Order now at cravebox.in</text>
+  <text x="600" y="517" text-anchor="middle" font-family="system-ui,sans-serif" font-size="22" font-weight="700" fill="#ffffff">Order now at lifepizza.in</text>
 </svg>

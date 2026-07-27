@@ -1,4 +1,4 @@
-# 🌿 CraveBox — Full-Stack Food Ordering App
+# 🍕 Lifepizza — Full-Stack Food Ordering App
 
 A production-ready food ordering platform built with **Next.js 14**, **MongoDB**, **Razorpay**, and **Cloudinary** — fresh white & green design.
 
@@ -62,8 +62,8 @@ Fresh **white & green** theme — clean, modern, food-tech aesthetic. Color pale
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/yourusername/cravebox.git
-cd cravebox
+git clone https://github.com/yourusername/lifepizza.git
+cd lifepizza
 npm install
 ```
 
@@ -114,7 +114,7 @@ vercel
 
 Add all env vars in Vercel dashboard → Project → Settings → Environment Variables.
 
-Make sure `NEXTAUTH_URL` is set to your production URL (e.g. `https://cravebox.vercel.app`).
+Make sure `NEXTAUTH_URL` is set to your production URL (e.g. `https://lifepizza.vercel.app`).
 
 ---
 

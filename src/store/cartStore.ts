@@ -19,7 +19,7 @@ interface CartStore {
   setHydrated: (value: boolean) => void
 
   addItem:     (item: Omit<CartItem, 'qty'>, qty?: number) => void
-  removeItem:  (id: string) => void
+  removeItem:  (id: string, customizations?: string) => void
   updateQty:   (id: string, qty: number, customizations?: string) => void
   clearCart:   () => void
   totalItems:  () => number
@@ -61,9 +61,14 @@ export const useCart = create<CartStore>()(
         }
       }),
 
-      removeItem: (id) => set((state) => ({
-        items: state.items.filter(i => i._id !== id),
-      })),
+      removeItem: (id, customizations) => set((state) => {
+        const key = customizations || ''
+        return {
+          items: state.items.filter(i =>
+            !(i._id === id && (i.customizations || '') === key)
+          ),
+        }
+      }),
 
       updateQty: (id, qty, customizations) => set((state) => {
         const key = customizations || ''
@@ -103,7 +108,7 @@ export const useCart = create<CartStore>()(
         get().tax(),
     }),
     {
-      name: 'cravebox-cart',
+      name: 'lifepizza-cart',
 
       // ⭐ ADDED
       onRehydrateStorage: () => (state) => {

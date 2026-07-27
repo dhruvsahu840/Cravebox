@@ -1,5 +1,5 @@
 export const STORE = {
-  name: 'CraveBox',
+  name: 'Lifepizza',
   phone: '+919876543210',
   whatsapp: '919876543210',
   city: 'Bhopal',

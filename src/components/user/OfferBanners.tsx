@@ -11,27 +11,6 @@ const OFFERS = [
   { code: 'FREEMAGGI', label: '₹30 off on Maggi',    short: '₹30 maggi', desc: 'Min ₹99 · Maggi special', color: 'from-purple-500 to-pink-500', emoji: '🍜' },
 ]
 
-const MARQUEE = [
-  '🎉 WELCOME20 — 20% off first order',
-  '🛵 Free delivery above ₹299',
-  '⚡ 30-min delivery guarantee',
-  '🍕 PIZZA30 — 30% off all pizzas',
-  '💳 Secure Razorpay payments',
-  '⭐ 4.8 rated by 2,000+ customers',
-]
-
-export function OfferStrip() {
-  return (
-    <div className="bg-gradient-to-r from-green-700 via-green-600 to-emerald-600 overflow-hidden py-2 relative z-20">
-      <div className="flex animate-marquee whitespace-nowrap">
-        {[...MARQUEE, ...MARQUEE].map((item, i) => (
-          <span key={i} className="text-white/95 text-[11px] sm:text-xs font-bold mx-6 sm:mx-8 tracking-wide">{item}</span>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 export function OfferCards() {
   const [copied, setCopied] = useState<string | null>(null)
 

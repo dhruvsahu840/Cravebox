@@ -60,7 +60,7 @@ async function consolidate() {
 
   const productCount = await craveboxDb.collection('products').countDocuments()
   const userCount = await craveboxDb.collection('users').countDocuments()
-  console.log(`\nCravebox now has ${productCount} products, ${userCount} users`)
+  console.log(`\nDatabase now has ${productCount} products, ${userCount} users`)
 
   await mongoose.disconnect()
 

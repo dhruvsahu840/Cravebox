@@ -30,7 +30,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             <Menu size={22} />
           </button>
           <div className="text-base font-black text-green-900">
-            🌿 Crave<span className="text-green-600">Box</span>
+            🍕 Life<span className="text-green-600">pizza</span>
             <span className="text-xs font-medium text-gray-400 ml-2">Admin</span>
           </div>
         </header>

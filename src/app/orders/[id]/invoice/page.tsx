@@ -23,7 +23,7 @@ export default function InvoicePage() {
         </div>
       </div>
       <div className="text-center mb-6">
-        <h1 className="text-2xl font-black text-green-900">CraveBox</h1>
+        <h1 className="text-2xl font-black text-green-900">Lifepizza</h1>
         <p className="text-gray-500 text-sm">Tax Invoice</p>
       </div>
       <div className="space-y-2 text-sm mb-6 text-gray-800">
@@ -50,7 +50,7 @@ export default function InvoicePage() {
         {order.discount > 0 && <div className="flex justify-between text-green-600"><span>Discount</span><span>−₹{order.discount}</span></div>}
         <div className="flex justify-between font-black text-lg pt-2 text-gray-900"><span>Total</span><span className="text-green-600">₹{order.total}</span></div>
       </div>
-      <p className="text-xs text-gray-500 mt-8 text-center">Thank you for ordering from CraveBox · Bhopal, MP</p>
+      <p className="text-xs text-gray-500 mt-8 text-center">Thank you for ordering from Lifepizza · Bhopal, MP</p>
     </div>
   )
 }

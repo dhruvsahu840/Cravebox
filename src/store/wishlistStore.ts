@@ -32,7 +32,7 @@ export const useWishlist = create<WishlistStore>()(
       remove: (id) => set(s => ({ items: s.items.filter(i => i._id !== id) })),
     }),
     {
-      name: 'cravebox-wishlist',
+      name: 'lifepizza-wishlist',
       onRehydrateStorage: () => (s) => s?.setHydrated(true),
     }
   )

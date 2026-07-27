@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { Clock } from 'lucide-react'
 
 const POSTS = [
-  { slug: 'best-pizza-bhopal', title: 'Best Pizzas in Bhopal — Our Top Picks', date: 'Jun 2026', emoji: '🍕', excerpt: 'From classic Margherita to loaded veggie supreme — discover what makes CraveBox pizzas special.' },
+  { slug: 'best-pizza-bhopal', title: 'Best Pizzas in Bhopal — Our Top Picks', date: 'Jun 2026', emoji: '🍕', excerpt: 'From classic Margherita to loaded veggie supreme — discover what makes Lifepizza pizzas special.' },
   { slug: 'late-night-maggi', title: 'Late Night Maggi Cravings? We Got You', date: 'May 2026', emoji: '🍜', excerpt: 'Why our masala maggi is the perfect midnight snack delivered in 30 minutes.' },
   { slug: 'healthy-eating', title: 'Eating Healthy While Ordering In', date: 'Apr 2026', emoji: '🥗', excerpt: 'Tips for choosing veg, lighter options, and balanced meals from our menu.' },
 ]

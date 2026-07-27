@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     const otp = String(Math.floor(1000 + Math.random() * 9000))
     otpStore.set(phone, { otp, name, expires: Date.now() + 5 * 60_000 })
 
-    const email = `guest_${phone}@cravebox.local`
+    const email = `guest_${phone}@lifepizza.local`
     const password = `guest_${phone}`
     const existing = await User.findOne({ email })
     if (!existing) {

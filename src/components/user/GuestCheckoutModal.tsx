@@ -31,7 +31,7 @@ export function GuestCheckoutModal({ open, onClose, onSuccess }: Props) {
   const verify = async () => {
     if (otp !== sentOtp) { toast.error('Invalid OTP'); return }
     setLoading(true)
-    const email = `guest_${phone}@cravebox.local`
+    const email = `guest_${phone}@lifepizza.local`
     const password = `guest_${phone}`
     const login = await signIn('credentials', { email: email.toLowerCase(), password, redirect: false })
     setLoading(false)
