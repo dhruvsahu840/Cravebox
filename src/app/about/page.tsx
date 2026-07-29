@@ -49,7 +49,7 @@ export default function AboutPage() {
         <div className="card p-6 text-center">
           <Mail size={20} className="text-green-600 mx-auto mb-2" />
           <p className="font-bold text-gray-900 dark:text-white mb-1">Get in touch</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">hello@lifepizza.in · Open 10 AM – 11 PM daily</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Open 10 AM – 11 PM daily · Set your real phone in Admin → Settings</p>
           <Link href="/" className="btn-primary inline-block">Order now</Link>
         </div>
       </div>

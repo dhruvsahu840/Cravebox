@@ -34,6 +34,12 @@ export async function PATCH(req: NextRequest) {
       deliveryFee: body.deliveryFee,
       freeDeliveryMin: body.freeDeliveryMin,
       minOrder: body.minOrder,
+      phone: body.phone,
+      whatsapp: body.whatsapp,
+      adminNotifyPhone: body.adminNotifyPhone,
+      city: body.city,
+      openHour: body.openHour,
+      closeHour: body.closeHour,
     })
     return NextResponse.json({ settings })
   } catch (err: any) {

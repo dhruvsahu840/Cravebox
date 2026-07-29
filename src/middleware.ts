@@ -7,22 +7,37 @@ export default withAuth(
     const token = req.nextauth.token
 
     // Admin routes require admin role
-    if (pathname.startsWith('/admin') && token?.role !== 'admin') {
-      return NextResponse.redirect(new URL('/', req.url))
+    if (pathname.startsWith('/admin')) {
+      if (!token) {
+        const url = new URL('/auth/login', req.url)
+        url.searchParams.set('callbackUrl', pathname)
+        return NextResponse.redirect(url)
+      }
+      if (token.role !== 'admin') {
+        const url = new URL('/auth/login', req.url)
+        url.searchParams.set('error', 'NotAdmin')
+        url.searchParams.set('callbackUrl', pathname)
+        return NextResponse.redirect(url)
+      }
     }
 
-    // Protected user routes require any auth
     if ((pathname.startsWith('/orders') || pathname.startsWith('/profile')) && !token) {
-      return NextResponse.redirect(new URL('/auth/login', req.url))
+      const url = new URL('/auth/login', req.url)
+      url.searchParams.set('callbackUrl', pathname)
+      return NextResponse.redirect(url)
     }
 
     return NextResponse.next()
   },
   {
+    pages: {
+      signIn: '/auth/login',
+    },
     callbacks: {
       authorized: ({ token, req }) => {
         const { pathname } = req.nextUrl
-        if (pathname.startsWith('/admin')) return !!token
+        // Let the function above handle redirects with clear messages
+        if (pathname.startsWith('/admin')) return true
         if (pathname.startsWith('/orders') || pathname.startsWith('/profile')) return !!token
         return true
       },

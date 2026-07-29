@@ -14,7 +14,7 @@ export function StickyCartBar() {
   const eta = getDeliveryEstimate(totalItems)
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 p-3 md:hidden pointer-events-none">
+    <div className="fixed bottom-16 left-0 right-0 z-40 p-3 md:hidden pointer-events-none">
       <button
         onClick={() => document.dispatchEvent(new Event('open-cart'))}
         className="pointer-events-auto w-full max-w-lg mx-auto flex items-center justify-between bg-gradient-to-r from-green-600 to-emerald-600 text-white px-5 py-3.5 rounded-2xl shadow-2xl shadow-green-600/30 active:scale-[0.98] transition-transform"

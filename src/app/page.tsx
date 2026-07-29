@@ -49,6 +49,8 @@ export default function HomePage() {
             <Link href="/offers" className="hover:text-green-600">Offers</Link>
             <Link href="/faq" className="hover:text-green-600">FAQ</Link>
             <Link href="/blog" className="hover:text-green-600">Blog</Link>
+            <Link href="/privacy" className="hover:text-green-600">Privacy</Link>
+            <Link href="/terms" className="hover:text-green-600">Terms</Link>
             <Link href="/profile" className="hover:text-green-600">Profile</Link>
           </div>
           <p className="text-gray-400 text-xs mt-3">📞 +91 98765 43210 · Made with ❤️ in India</p>

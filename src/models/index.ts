@@ -19,6 +19,8 @@ export interface IUser extends Document {
   loyaltyPoints: number
   referralCode: string
   isActive: boolean
+  resetToken?: string
+  resetTokenExpires?: Date
   createdAt: Date
 }
 
@@ -39,6 +41,8 @@ const UserSchema = new Schema<IUser>({
   loyaltyPoints: { type: Number, default: 0 },
   referralCode:  { type: String, unique: true, sparse: true, default: undefined },
   isActive: { type: Boolean, default: true },
+  resetToken: { type: String, select: false },
+  resetTokenExpires: { type: Date, select: false },
 }, { timestamps: true })
 
 // ─── Category ──────────────────────────────────────────────────────────────────
@@ -151,6 +155,7 @@ export interface IOrder extends Document {
   estimatedDelivery?: Date
   scheduledFor?: Date
   specialInstructions?: string
+  couponCode?: string
   rating?: { score: number; comment: string; deliveryScore?: number }
   createdAt: Date
 }
@@ -186,13 +191,14 @@ const OrderSchema = new Schema<IOrder>({
   estimatedDelivery:    Date,
   scheduledFor:         Date,
   specialInstructions:  String,
+  couponCode:           String,
   rating:               { score: Number, comment: String, deliveryScore: Number },
 }, { timestamps: true })
 
 OrderSchema.pre('save', async function (next) {
   if (!this.orderNumber) {
     const count = await mongoose.model('Order').countDocuments()
-    this.orderNumber = `CRV${String(count + 1).padStart(5, '0')}`
+    this.orderNumber = `LPZ${String(count + 1).padStart(5, '0')}`
   }
   next()
 })
@@ -254,14 +260,39 @@ export interface IStoreSettings extends Document {
   deliveryFee: number
   freeDeliveryMin: number
   minOrder: number
+  phone: string
+  whatsapp: string
+  adminNotifyPhone: string
+  city: string
+  openHour: number
+  closeHour: number
 }
 
 const StoreSettingsSchema = new Schema<IStoreSettings>({
-  key:             { type: String, default: 'store', unique: true },
-  taxRate:         { type: Number, default: 0.05, min: 0, max: 0.3 },
-  deliveryFee:     { type: Number, default: 40, min: 0, max: 500 },
-  freeDeliveryMin: { type: Number, default: 299, min: 0 },
-  minOrder:        { type: Number, default: 99, min: 0 },
+  key:              { type: String, default: 'store', unique: true },
+  taxRate:          { type: Number, default: 0.05, min: 0, max: 0.3 },
+  deliveryFee:      { type: Number, default: 40, min: 0, max: 500 },
+  freeDeliveryMin:  { type: Number, default: 299, min: 0 },
+  minOrder:         { type: Number, default: 99, min: 0 },
+  phone:            { type: String, default: '' },
+  whatsapp:         { type: String, default: '' },
+  adminNotifyPhone: { type: String, default: '' },
+  city:             { type: String, default: 'Bhopal' },
+  openHour:         { type: Number, default: 10, min: 0, max: 23 },
+  closeHour:        { type: Number, default: 23, min: 1, max: 24 },
 }, { timestamps: true })
 
 export const StoreSettings = mongoose.models.StoreSettings || mongoose.model<IStoreSettings>('StoreSettings', StoreSettingsSchema)
+
+// ─── Guest OTP sessions ────────────────────────────────────────────────────────
+const OtpSessionSchema = new Schema({
+  phone:     { type: String, required: true, index: true },
+  otpHash:   { type: String, required: true },
+  name:      { type: String, default: 'Guest' },
+  attempts:  { type: Number, default: 0 },
+  expiresAt: { type: Date, required: true },
+}, { timestamps: true })
+
+OtpSessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 })
+
+export const OtpSession = mongoose.models.OtpSession || mongoose.model('OtpSession', OtpSessionSchema)

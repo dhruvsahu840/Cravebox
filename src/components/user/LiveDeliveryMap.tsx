@@ -1,43 +1,51 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { MapPin, Bike } from 'lucide-react'
+import { MapPin, Bike, Clock } from 'lucide-react'
+
+const STATUS_COPY: Record<string, { title: string; hint: string; progress: number }> = {
+  pending: { title: 'Order received', hint: 'Waiting for kitchen confirmation', progress: 15 },
+  confirmed: { title: 'Order confirmed', hint: 'Kitchen has accepted your order', progress: 30 },
+  preparing: { title: 'Preparing your food', hint: 'Being cooked fresh', progress: 55 },
+  out_for_delivery: { title: 'Out for delivery', hint: 'Rider is on the way', progress: 80 },
+  delivered: { title: 'Delivered', hint: 'Enjoy your meal!', progress: 100 },
+}
 
 export function LiveDeliveryMap({ status }: { status: string }) {
-  const [progress, setProgress] = useState(20)
+  const [progress, setProgress] = useState(15)
+  const info = STATUS_COPY[status]
 
   useEffect(() => {
-    if (status === 'out_for_delivery') {
-      const id = setInterval(() => setProgress(p => Math.min(95, p + 2)), 3000)
-      return () => clearInterval(id)
-    }
-    if (status === 'delivered') setProgress(100)
-    else if (status === 'preparing') setProgress(40)
-    else if (status === 'confirmed') setProgress(25)
-  }, [status])
+    if (!info) return
+    setProgress(info.progress)
+  }, [status, info])
 
-  if (status === 'cancelled' || status === 'delivered') return null
+  if (status === 'cancelled' || !info || status === 'delivered') return null
 
   return (
     <div className="card p-4 mb-6 overflow-hidden">
-      <h3 className="font-bold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-        <MapPin size={16} className="text-green-600" /> Live delivery map
+      <h3 className="font-bold text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-2">
+        <MapPin size={16} className="text-green-600" /> Order progress
       </h3>
-      <div className="relative h-40 bg-gradient-to-br from-green-100 to-emerald-50 dark:from-green-900/30 dark:to-gray-800 rounded-xl overflow-hidden">
-        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'repeating-linear-gradient(0deg, #16a34a 0px, transparent 1px, transparent 20px), repeating-linear-gradient(90deg, #16a34a 0px, transparent 1px, transparent 20px)' }} />
-        <div className="absolute left-4 bottom-4 w-3 h-3 bg-green-600 rounded-full border-2 border-white shadow" title="Restaurant" />
-        <div className="absolute right-4 top-4 w-3 h-3 bg-red-500 rounded-full border-2 border-white shadow" title="Your location" />
+      <p className="text-xs text-gray-500 mb-3 flex items-center gap-1">
+        <Clock size={12} /> {info.hint}
+      </p>
+      <div className="relative h-3 bg-green-100 dark:bg-green-900/40 rounded-full overflow-hidden mb-3">
         <div
-          className="absolute transition-all duration-1000 ease-linear"
-          style={{ left: `${progress}%`, top: `${100 - progress * 0.8}%`, transform: 'translate(-50%, -50%)' }}
-        >
-          <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center shadow-lg shadow-green-600/30 animate-pulse">
-            <Bike size={16} className="text-white" />
-          </div>
-        </div>
+          className="absolute inset-y-0 left-0 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all duration-700"
+          style={{ width: `${progress}%` }}
+        />
       </div>
-      {status === 'out_for_delivery' && (
-        <p className="text-xs text-green-600 mt-2 text-center font-semibold animate-pulse">Rider is on the way to you</p>
-      )}
+      <div className="flex items-center justify-between text-sm">
+        <p className="font-bold text-green-800 dark:text-green-300">{info.title}</p>
+        {status === 'out_for_delivery' && (
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-600">
+            <Bike size={14} /> On the way
+          </span>
+        )}
+      </div>
+      <p className="text-[11px] text-gray-400 mt-2">
+        Status updates when the kitchen advances your order. This is not a live GPS map.
+      </p>
     </div>
   )
 }

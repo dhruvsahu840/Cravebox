@@ -19,12 +19,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email already registered' }, { status: 409 })
 
     const hashed = await bcrypt.hash(password, 12)
+    const adminEmail = (process.env.ADMIN_EMAIL || '').toLowerCase().trim()
+    const userEmail = email.toLowerCase().trim()
     const user = await User.create({
       name: name.trim(),
-      email: email.toLowerCase().trim(),
+      email: userEmail,
       password: hashed,
       phone,
-      role: email.toLowerCase() === process.env.ADMIN_EMAIL ? 'admin' : 'user',
+      role: adminEmail && userEmail === adminEmail ? 'admin' : 'user',
     })
 
     return NextResponse.json({

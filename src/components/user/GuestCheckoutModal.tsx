@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Phone, Loader2, X } from 'lucide-react'
 import { signIn } from 'next-auth/react'
 import toast from 'react-hot-toast'
@@ -15,28 +15,39 @@ export function GuestCheckoutModal({ open, onClose, onSuccess }: Props) {
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [otp, setOtp] = useState('')
-  const [sentOtp, setSentOtp] = useState('')
   const [loading, setLoading] = useState(false)
 
   const sendOtp = async () => {
-    if (!name || phone.length < 10) { toast.error('Enter name and valid phone'); return }
+    if (!name.trim() || phone.length < 10) { toast.error('Enter name and valid phone'); return }
     setLoading(true)
-    const res = await fetch('/api/guest/otp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone, name }) })
+    const res = await fetch('/api/guest/otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, name: name.trim() }),
+    })
     const d = await res.json()
     setLoading(false)
-    if (res.ok) { setSentOtp(d.otp); setStep('otp'); toast.success(`OTP sent! Demo code: ${d.otp}`) }
-    else toast.error(d.error)
+    if (res.ok) {
+      setStep('otp')
+      if (d.demoOtp) toast.success(`Demo OTP: ${d.demoOtp}`, { duration: 8000 })
+      else toast.success(d.message || 'OTP sent!')
+    } else toast.error(d.error || 'Failed to send OTP')
   }
 
   const verify = async () => {
-    if (otp !== sentOtp) { toast.error('Invalid OTP'); return }
+    if (otp.length < 4) { toast.error('Enter the OTP'); return }
     setLoading(true)
-    const email = `guest_${phone}@lifepizza.local`
-    const password = `guest_${phone}`
-    const login = await signIn('credentials', { email: email.toLowerCase(), password, redirect: false })
+    const login = await signIn('credentials', {
+      phone,
+      otp,
+      redirect: false,
+    })
     setLoading(false)
-    if (login?.ok) { toast.success('Welcome!'); onSuccess(); onClose() }
-    else toast.error('Could not sign in. Try registering first.')
+    if (login?.ok) {
+      toast.success('Welcome!')
+      onSuccess()
+      onClose()
+    } else toast.error('Invalid or expired OTP')
   }
 
   if (!open) return null
@@ -66,6 +77,9 @@ export function GuestCheckoutModal({ open, onClose, onSuccess }: Props) {
             <input className="input text-sm text-center text-2xl tracking-[0.5em] font-bold" placeholder="----" maxLength={4} value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, ''))} />
             <button onClick={verify} disabled={loading} className="btn-primary w-full py-2.5">
               {loading ? <Loader2 size={16} className="animate-spin mx-auto" /> : 'Verify & continue'}
+            </button>
+            <button type="button" onClick={() => setStep('phone')} className="text-xs text-green-600 font-semibold w-full">
+              Change number
             </button>
           </div>
         )}

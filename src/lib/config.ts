@@ -10,7 +10,7 @@ export const STORE = {
   openHour: 10,
   closeHour: 23,
   loyaltyPointsPer100: 10,
-  firstOrderCoupon: 'WELCOME50',
+  firstOrderCoupon: 'WELCOME20',
 }
 
 export function isStoreOpen(): boolean {

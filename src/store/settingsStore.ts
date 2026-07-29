@@ -6,6 +6,11 @@ export type Settings = {
   deliveryFee: number
   freeDeliveryMin: number
   minOrder: number
+  phone?: string
+  whatsapp?: string
+  city?: string
+  openHour?: number
+  closeHour?: number
 }
 
 interface SettingsStore {
@@ -20,6 +25,11 @@ const defaults: Settings = {
   deliveryFee: STORE.deliveryFee,
   freeDeliveryMin: STORE.freeDeliveryMin,
   minOrder: STORE.minOrder,
+  phone: STORE.phone,
+  whatsapp: STORE.whatsapp,
+  city: STORE.city,
+  openHour: STORE.openHour,
+  closeHour: STORE.closeHour,
 }
 
 export const useSettings = create<SettingsStore>((set) => ({
@@ -30,7 +40,7 @@ export const useSettings = create<SettingsStore>((set) => ({
       const res = await fetch('/api/store/settings')
       const data = await res.json()
       if (res.ok && data.settings) {
-        set({ settings: data.settings, loaded: true })
+        set({ settings: { ...defaults, ...data.settings }, loaded: true })
       } else {
         set({ loaded: true })
       }
@@ -38,7 +48,7 @@ export const useSettings = create<SettingsStore>((set) => ({
       set({ loaded: true })
     }
   },
-  setSettings: (s) => set({ settings: s, loaded: true }),
+  setSettings: (s) => set({ settings: { ...defaults, ...s }, loaded: true }),
 }))
 
 export function getSettingsSnapshot(): Settings {

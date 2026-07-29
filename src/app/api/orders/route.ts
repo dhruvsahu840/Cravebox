@@ -3,11 +3,10 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { connectDB } from '@/lib/db'
 import { Order, Product, Coupon, User } from '@/models'
-import { STORE } from '@/lib/config'
-import { getStoreSettings, calcDeliveryFee, calcTax } from '@/lib/storeSettings'
+import { getStoreSettings, calcDeliveryFee, calcTax, isStoreOpenNow } from '@/lib/storeSettings'
 import { hasSizeOptions, resolveUnitPrice } from '@/lib/productPricing'
+import { notifyAdminNewOrder } from '@/lib/notify'
 
-// GET /api/orders — user gets their own, admin gets all
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -38,7 +37,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST /api/orders — place a new order
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -50,7 +48,13 @@ export async function POST(req: NextRequest) {
     if (!items?.length) return NextResponse.json({ error: 'Cart is empty' }, { status: 400 })
     if (!address)       return NextResponse.json({ error: 'Delivery address is required' }, { status: 400 })
 
-    // Verify products + calculate totals server-side (never trust client prices)
+    const settings = await getStoreSettings()
+    if (!scheduledFor && !isStoreOpenNow(settings)) {
+      return NextResponse.json({
+        error: `Store is closed. Open ${settings.openHour}:00 – ${settings.closeHour}:00`,
+      }, { status: 400 })
+    }
+
     const productIds = items.map((i: any) => i.product)
     const products: any[] = await Product.find({ _id: { $in: productIds } }).lean()
 
@@ -74,13 +78,13 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    const subtotal    = verifiedItems.reduce((s: number, i: any) => s + i.price * i.qty, 0)
-    const settings    = await getStoreSettings()
-    if (subtotal < settings.minOrder) return NextResponse.json({ error: `Minimum order is ₹${settings.minOrder}` }, { status: 400 })
+    const subtotal = verifiedItems.reduce((s: number, i: any) => s + i.price * i.qty, 0)
+    if (subtotal < settings.minOrder) {
+      return NextResponse.json({ error: `Minimum order is ₹${settings.minOrder}` }, { status: 400 })
+    }
     const deliveryFee = calcDeliveryFee(subtotal, settings)
     const tax         = calcTax(subtotal, settings)
 
-    // Verify coupon server-side — never trust a client-sent discount amount
     let discount   = 0
     let appliedCoupon: any = null
     if (couponCode) {
@@ -103,7 +107,7 @@ export async function POST(req: NextRequest) {
     }
 
     const total = subtotal + deliveryFee + tax - discount
-
+    const method = paymentMethod === 'razorpay' ? 'razorpay' : 'cod'
     const estimated = scheduledFor ? new Date(scheduledFor) : new Date(Date.now() + 35 * 60 * 1000)
 
     const order = await Order.create({
@@ -116,18 +120,30 @@ export async function POST(req: NextRequest) {
       discount,
       total,
       specialInstructions,
+      couponCode:          appliedCoupon?.code,
       scheduledFor:        scheduledFor ? new Date(scheduledFor) : undefined,
       payment: {
-        method: paymentMethod || 'cod',
-        status: paymentMethod === 'cod' ? 'pending' : 'pending',
+        method,
+        status: 'pending',
       },
-      statusHistory: [{ status: 'pending', time: new Date(), note: 'Order placed' }],
+      status: method === 'cod' ? 'confirmed' : 'pending',
+      statusHistory: [{
+        status: method === 'cod' ? 'confirmed' : 'pending',
+        time: new Date(),
+        note: method === 'cod' ? 'Order placed (Cash on delivery)' : 'Awaiting online payment',
+      }],
       estimatedDelivery: estimated,
     })
 
-    if (appliedCoupon) {
+    // Only burn coupon for COD now; Razorpay burns after successful verify
+    if (appliedCoupon && method === 'cod') {
       appliedCoupon.usedCount += 1
       await appliedCoupon.save()
+    }
+
+    if (method === 'cod') {
+      const user = await User.findById(session.user.id).select('name phone').lean()
+      notifyAdminNewOrder(order, user as any).catch(() => {})
     }
 
     return NextResponse.json({ order }, { status: 201 })

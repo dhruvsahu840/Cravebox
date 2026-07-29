@@ -129,6 +129,16 @@ export function CartDrawer() {
             router.push(`/orders/${orderData.order._id}`)
           } else toast.error('Payment verification failed')
         },
+        modal: {
+          ondismiss: async () => {
+            await fetch('/api/payments/cancel', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ orderId: orderData.order._id }),
+            }).catch(() => {})
+            toast.error('Payment cancelled. You can try again from cart.')
+          },
+        },
       }
       ;(window as any).Razorpay(options).open()
     } catch (err: any) {

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
-import { storeStatusLabel } from '@/lib/config'
+import { getStoreSettings, storeStatusFromSettings } from '@/lib/storeSettings'
 
 export async function GET() {
-  return NextResponse.json(storeStatusLabel())
+  const settings = await getStoreSettings()
+  return NextResponse.json(storeStatusFromSettings(settings))
 }

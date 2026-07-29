@@ -1,9 +1,9 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import GoogleProvider from 'next-auth/providers/google'
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 import { connectDB } from '@/lib/db'
-import { User } from '@/models'
+import { User, OtpSession } from '@/models'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -12,11 +12,61 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email:    { label: 'Email',    type: 'email' },
         password: { label: 'Password', type: 'password' },
+        phone:    { label: 'Phone',    type: 'text' },
+        otp:      { label: 'OTP',      type: 'text' },
       },
       async authorize(credentials) {
+        await connectDB()
+
+        // Guest OTP login
+        if (credentials?.phone && credentials?.otp) {
+          const phone = String(credentials.phone).replace(/\D/g, '').slice(-10)
+          const otp = String(credentials.otp).trim()
+          if (phone.length !== 10 || otp.length < 4) return null
+
+          const session = await OtpSession.findOne({ phone }).sort({ createdAt: -1 })
+          if (!session || session.expiresAt.getTime() < Date.now()) return null
+          if (session.attempts >= 5) return null
+
+          const valid = await bcrypt.compare(otp, session.otpHash)
+          if (!valid) {
+            session.attempts += 1
+            await session.save()
+            return null
+          }
+
+          const email = `guest_${phone}@lifepizza.local`
+          let user = await User.findOne({ email })
+          if (!user) {
+            const randomPw = crypto.randomBytes(24).toString('hex')
+            const hash = await bcrypt.hash(randomPw, 10)
+            user = await User.create({
+              name: session.name || 'Guest',
+              email,
+              phone,
+              password: hash,
+              role: 'user',
+            })
+          } else if (!user.isActive) {
+            return null
+          } else if (session.name && user.name === 'Guest') {
+            user.name = session.name
+            await user.save()
+          }
+
+          await OtpSession.deleteMany({ phone })
+
+          return {
+            id:    user._id.toString(),
+            email: user.email,
+            name:  user.name,
+            role:  user.role,
+            image: user.avatar,
+          }
+        }
+
         if (!credentials?.email || !credentials?.password) return null
         const email = credentials.email.toLowerCase().trim()
-        await connectDB()
 
         const user = await User.findOne({ email }).select('+password')
         if (!user || !user.password) return null
@@ -50,7 +100,6 @@ export const authOptions: NextAuthOptions = {
 
       await connectDB()
 
-      // Always resolve user from DB by email (handles stale IDs after DB changes)
       const email = (token.email as string | undefined)?.toLowerCase()
       let dbUser = email
         ? await User.findOne({ email }).select('-password')
@@ -61,7 +110,6 @@ export const authOptions: NextAuthOptions = {
       }
 
       if (!dbUser || !dbUser.isActive) {
-        // Invalid/stale session — clear user id so protected routes redirect
         session.user.id = ''
         session.user.role = 'user'
         return session
