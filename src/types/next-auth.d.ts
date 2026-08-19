@@ -3,23 +3,29 @@ import 'next-auth/jwt'
 
 declare module 'next-auth' {
   interface User {
-    id:   string
+    id: string
     role: string
+    phone?: string
+    phoneVerified?: boolean
   }
   interface Session {
     user: {
-      id:    string
-      name:  string
+      id: string
+      name: string
       email: string
-      role:  string
+      role: string
       image?: string
+      phone: string
+      phoneVerified: boolean
     }
   }
 }
 
 declare module 'next-auth/jwt' {
   interface JWT {
-    id:   string
+    id: string
     role: string
+    phone?: string
+    phoneVerified?: boolean
   }
 }

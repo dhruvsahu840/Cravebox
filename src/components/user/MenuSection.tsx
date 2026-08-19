@@ -1,6 +1,6 @@
 'use client'
-import { useEffect, useState, useCallback } from 'react'
-import { Plus, Minus, Star, Loader2, Heart, Flame, Leaf } from 'lucide-react'
+import { useEffect, useState, useCallback, useRef } from 'react'
+import { Plus, Minus, Star, Heart, Flame, Leaf, Search, X } from 'lucide-react'
 import { useCart } from '@/store/cartStore'
 import { useWishlist } from '@/store/wishlistStore'
 import { ProductDetailModal, MenuProduct } from '@/components/user/ProductDetailModal'
@@ -20,30 +20,51 @@ export function MenuSection() {
   const [activecat, setActiveCat]       = useState('all')
   const [search, setSearch]           = useState('')
   const [loading, setLoading]         = useState(true)
+  const [filtering, setFiltering]     = useState(false)
   const [selectedProduct, setSelected] = useState<MenuProduct | null>(null)
   const [filterVeg, setFilterVeg] = useState(false)
   const [filterBest, setFilterBest] = useState(false)
   const [sortBy, setSortBy] = useState<'default' | 'price-low' | 'price-high' | 'rating'>('default')
   const { items, addItem, updateQty } = useCart()
   const { toggle: toggleWish, has: hasWish, hydrated: wishHydrated } = useWishlist()
+  const hasLoadedOnce = useRef(false)
+  const fetchId = useRef(0)
 
   useEffect(() => {
-    const handler = (e: any) => setSearch(e.detail)
+    const handler = (e: any) => {
+      const q = typeof e.detail === 'string' ? e.detail : ''
+      setSearch(q)
+      // Searching from hero should show matches across the full menu
+      if (q.trim()) setActiveCat('all')
+    }
     document.addEventListener('menu-search', handler)
     return () => document.removeEventListener('menu-search', handler)
   }, [])
 
+  const clearSearch = () => {
+    setSearch('')
+    document.dispatchEvent(new CustomEvent('menu-search-clear'))
+    document.dispatchEvent(new CustomEvent('menu-search', { detail: '' }))
+  }
+
   const fetchData = useCallback(async () => {
-    setLoading(true)
+    const id = ++fetchId.current
+    if (!hasLoadedOnce.current) setLoading(true)
+    else setFiltering(true)
+
     const [prodRes, catRes] = await Promise.all([
-      fetch(`/api/products?limit=40${activecat !== 'all' ? `&category=${activecat}` : ''}${search ? `&search=${search}` : ''}`),
+      fetch(`/api/products?limit=40${activecat !== 'all' ? `&category=${activecat}` : ''}${search ? `&search=${encodeURIComponent(search)}` : ''}`),
       fetch('/api/categories'),
     ])
     const pd = await prodRes.json()
     const cd = await catRes.json()
+    if (id !== fetchId.current) return
+
     setProducts(pd.products || [])
     setCategories(cd.categories || [])
     setLoading(false)
+    setFiltering(false)
+    hasLoadedOnce.current = true
   }, [activecat, search])
 
   useEffect(() => { fetchData() }, [fetchData])
@@ -88,19 +109,43 @@ export function MenuSection() {
 
   return (
     <>
-      <section id="menu" className="max-w-6xl mx-auto px-4 py-5 md:py-8">
-        <div className="flex items-center gap-2 mb-6">
+      <section id="menu" className="max-w-6xl mx-auto px-4 py-5 md:py-8 scroll-mt-40">
+        <div className="flex items-center gap-2 mb-4">
           <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center text-lg">🍽️</div>
           <h2 className="section-title mb-0">Explore menu</h2>
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-2 mb-8 scrollbar-hide">
+
+        {search ? (
+          <div className="flex items-center justify-between gap-3 mb-4 px-3 py-2.5 rounded-xl bg-green-50 dark:bg-gray-800/60 border border-green-100 dark:border-gray-700">
+            <div className="flex items-center gap-2 min-w-0">
+              <Search size={15} className="text-green-600 flex-shrink-0" />
+              <p className="text-sm text-gray-700 dark:text-gray-200 truncate">
+                <span className="font-bold text-green-800 dark:text-green-300">“{search}”</span>
+                {!loading && !filtering ? (
+                  <span className="text-gray-400 font-medium"> · {displayed.length} found</span>
+                ) : (
+                  <span className="text-gray-400 font-medium"> · searching…</span>
+                )}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => { clearSearch(); setFilterVeg(false); setFilterBest(false); setActiveCat('all') }}
+              className="flex-shrink-0 inline-flex items-center gap-1 text-xs font-bold text-green-700 hover:text-green-900 dark:text-green-400"
+            >
+              <X size={14} /> Clear
+            </button>
+          </div>
+        ) : null}
+
+        <div className="flex gap-2 overflow-x-auto pb-2 mb-5 scrollbar-hide">
           <button onClick={() => setActiveCat('all')}
-            className={`flex-shrink-0 px-5 py-2.5 rounded-full text-sm font-bold transition-all border shadow-sm ${activecat === 'all' ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white border-transparent shadow-green-600/25' : 'bg-white/80 backdrop-blur-sm text-gray-600 border-green-200/80 hover:bg-white hover:border-green-400'}`}>
+            className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-bold transition-all border shadow-sm ${activecat === 'all' ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white border-transparent shadow-green-600/25' : 'bg-white/80 backdrop-blur-sm text-gray-600 border-green-200/80 hover:bg-white hover:border-green-400'}`}>
             🍽️ All
           </button>
           {categories.map(cat => (
             <button key={cat._id} onClick={() => setActiveCat(cat._id)}
-              className={`flex-shrink-0 px-5 py-2.5 rounded-full text-sm font-bold transition-all border shadow-sm ${activecat === cat._id ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white border-transparent shadow-green-600/25' : 'bg-white/80 backdrop-blur-sm text-gray-600 border-green-200/80 hover:bg-white hover:border-green-400'}`}>
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-bold transition-all border shadow-sm ${activecat === cat._id ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white border-transparent shadow-green-600/25' : 'bg-white/80 backdrop-blur-sm text-gray-600 border-green-200/80 hover:bg-white hover:border-green-400'}`}>
               {catEmoji(cat.name)} {cat.name}
             </button>
           ))}
@@ -128,9 +173,15 @@ export function MenuSection() {
             ))}
           </div>
         ) : displayed.length === 0 ? (
-          <EmptyState emoji="🔍" title="Nothing found" description="Try a different search or filter" actionLabel="Clear filters" onAction={() => { setSearch(''); setFilterVeg(false); setFilterBest(false); setActiveCat('all') }} />
+          <EmptyState
+            emoji="🔍"
+            title="Nothing found"
+            description={search ? `No dishes matched “${search}”. Try pizza, burger, or maggi.` : 'Try a different search or filter'}
+            actionLabel="Clear filters"
+            onAction={() => { clearSearch(); setFilterVeg(false); setFilterBest(false); setActiveCat('all') }}
+          />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 transition-opacity duration-200 ${filtering ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
             {displayed.map(product => {
               const qty   = getQty(product._id)
               const price = minProductPrice(product)

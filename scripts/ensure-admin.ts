@@ -21,7 +21,7 @@ async function main() {
 
   const existing = await users.findOne({ email: adminEmail })
   if (existing) {
-    await users.updateOne({ email: adminEmail }, { $set: { role: 'admin', isActive: true } })
+    await users.updateOne({ email: adminEmail }, { $set: { role: 'admin', isActive: true, phoneVerified: true } })
     console.log(`Promoted existing user to admin: ${adminEmail}`)
   } else {
     const password = process.env.ADMIN_PASSWORD || 'Admin@123'
@@ -32,6 +32,7 @@ async function main() {
       password: hash,
       role: 'admin',
       isActive: true,
+      phoneVerified: true,
       loyaltyPoints: 0,
       addresses: [],
       createdAt: new Date(),

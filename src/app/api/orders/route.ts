@@ -55,6 +55,17 @@ export async function POST(req: NextRequest) {
       }, { status: 400 })
     }
 
+    // Customers must have a verified phone before ordering
+    if (session.user.role !== 'admin') {
+      const orderingUser = await User.findById(session.user.id).select('phone phoneVerified role')
+      if (!orderingUser?.phone || !orderingUser.phoneVerified) {
+        return NextResponse.json({
+          error: 'Verify your phone number with WhatsApp OTP before placing an order',
+          code: 'PHONE_REQUIRED',
+        }, { status: 403 })
+      }
+    }
+
     const productIds = items.map((i: any) => i.product)
     const products: any[] = await Product.find({ _id: { $in: productIds } }).lean()
 

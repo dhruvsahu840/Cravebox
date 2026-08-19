@@ -1,42 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
-import { connectDB } from '@/lib/db'
-import { User } from '@/models'
+import { NextResponse } from 'next/server'
 
-export async function POST(req: NextRequest) {
-  try {
-    const { name, email, password, phone } = await req.json()
-
-    if (!name || !email || !password)
-      return NextResponse.json({ error: 'All fields are required' }, { status: 400 })
-
-    if (password.length < 6)
-      return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 })
-
-    await connectDB()
-    const existing = await User.findOne({ email: email.toLowerCase() })
-    if (existing)
-      return NextResponse.json({ error: 'Email already registered' }, { status: 409 })
-
-    const hashed = await bcrypt.hash(password, 12)
-    const adminEmail = (process.env.ADMIN_EMAIL || '').toLowerCase().trim()
-    const userEmail = email.toLowerCase().trim()
-    const user = await User.create({
-      name: name.trim(),
-      email: userEmail,
-      password: hashed,
-      phone,
-      role: adminEmail && userEmail === adminEmail ? 'admin' : 'user',
-    })
-
-    return NextResponse.json({
-      message: 'Account created successfully',
-      user: { id: user._id, name: user.name, email: user.email },
-    }, { status: 201 })
-  } catch (err: any) {
-    if (err.code === 11000) {
-      return NextResponse.json({ error: 'Email already registered' }, { status: 409 })
-    }
-    return NextResponse.json({ error: err.message || 'Registration failed' }, { status: 500 })
-  }
+/** Public customer password signup is disabled. Use phone OTP. */
+export async function POST() {
+  return NextResponse.json(
+    {
+      error: 'Public signup with password is disabled. Please sign in with Phone OTP.',
+      code: 'SIGNUP_DISABLED',
+    },
+    { status: 403 }
+  )
 }

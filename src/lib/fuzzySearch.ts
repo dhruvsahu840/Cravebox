@@ -3,11 +3,9 @@ export function fuzzyMatch(query: string, text: string): boolean {
   const t = text.toLowerCase()
   if (!q) return true
   if (t.includes(q)) return true
-  let qi = 0
-  for (let i = 0; i < t.length && qi < q.length; i++) {
-    if (t[i] === q[qi]) qi++
-  }
-  return qi === q.length
+  // Match whole words / word starts — avoid loose letter-skip matching (e.g. "pz" → pizza)
+  const words = t.split(/[^a-z0-9]+/).filter(Boolean)
+  return words.some(w => w.startsWith(q))
 }
 
 export function fuzzyScore(query: string, text: string): number {
@@ -17,5 +15,7 @@ export function fuzzyScore(query: string, text: string): number {
   if (t === q) return 100
   if (t.startsWith(q)) return 80
   if (t.includes(q)) return 60
-  return fuzzyMatch(q, t) ? 30 : 0
+  const words = t.split(/[^a-z0-9]+/).filter(Boolean)
+  if (words.some(w => w.startsWith(q))) return 50
+  return 0
 }

@@ -1,5 +1,6 @@
 import { Navbar } from '@/components/user/Navbar'
 import { Hero } from '@/components/user/Hero'
+import { StickyMenuSearch } from '@/components/user/StickyMenuSearch'
 import { MenuSection } from '@/components/user/MenuSection'
 import { CartDrawer } from '@/components/user/CartDrawer'
 import { OfferCards } from '@/components/user/OfferBanners'
@@ -11,7 +12,6 @@ import { TrendingSection } from '@/components/user/TrendingSection'
 import { FlashDealBanner } from '@/components/user/FlashDealBanner'
 import { StoriesStrip } from '@/components/user/StoriesStrip'
 import { TrustBadges } from '@/components/user/TrustBadges'
-import { EmailCapture } from '@/components/user/EmailCapture'
 import { BottomNav } from '@/components/user/BottomNav'
 import { WhatsAppButton } from '@/components/user/WhatsAppButton'
 import { PWAInstallPrompt } from '@/components/user/PWAInstallPrompt'
@@ -22,6 +22,7 @@ export default function HomePage() {
     <div className="page-shell">
       <PageBackground />
       <Navbar />
+      <StickyMenuSearch />
       <div className="relative z-10 flex justify-center py-2">
         <StoreStatus />
       </div>
@@ -38,7 +39,6 @@ export default function HomePage() {
         <div className="order-2 lg:order-1">
           <OfferCards />
         </div>
-        <EmailCapture />
         <footer className="order-3 mt-8 lg:mt-12 border-t border-green-200/50 dark:border-gray-800 bg-gradient-to-b from-white/60 to-green-50/80 dark:from-gray-900/60 dark:to-gray-950/80 backdrop-blur-sm py-10 text-center pb-28 md:pb-10">
           <p className="text-green-900 dark:text-green-100 font-extrabold text-xl mb-1 tracking-tight">
             🍕 Life<span className="text-green-600">pizza</span>

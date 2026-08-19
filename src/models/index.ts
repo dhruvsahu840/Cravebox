@@ -3,9 +3,11 @@ import mongoose, { Schema, Document, Types } from 'mongoose'
 // ─── User ──────────────────────────────────────────────────────────────────────
 export interface IUser extends Document {
   name: string
-  email: string
+  email?: string
   password?: string
   phone?: string
+  phoneVerified: boolean
+  googleId?: string
   role: 'user' | 'admin'
   avatar?: string
   addresses: {
@@ -22,13 +24,16 @@ export interface IUser extends Document {
   resetToken?: string
   resetTokenExpires?: Date
   createdAt: Date
+  updatedAt: Date
 }
 
 const UserSchema = new Schema<IUser>({
   name:      { type: String, required: true, trim: true },
-  email:     { type: String, required: true, unique: true, lowercase: true },
-  password:  { type: String, select: false },
-  phone:     { type: String },
+  email:     { type: String, sparse: true, unique: true, lowercase: true, trim: true },
+  password:  { type: String, select: false }, // admins only
+  phone:     { type: String, sparse: true, unique: true, trim: true },
+  phoneVerified: { type: Boolean, default: false },
+  googleId:  { type: String, sparse: true, unique: true },
   role:      { type: String, enum: ['user', 'admin'], default: 'user' },
   avatar:    { type: String },
   addresses: [{
@@ -284,11 +289,13 @@ const StoreSettingsSchema = new Schema<IStoreSettings>({
 
 export const StoreSettings = mongoose.models.StoreSettings || mongoose.model<IStoreSettings>('StoreSettings', StoreSettingsSchema)
 
-// ─── Guest OTP sessions ────────────────────────────────────────────────────────
+// ─── OTP sessions (WhatsApp / phone auth) ──────────────────────────────────────
 const OtpSessionSchema = new Schema({
   phone:     { type: String, required: true, index: true },
   otpHash:   { type: String, required: true },
-  name:      { type: String, default: 'Guest' },
+  name:      { type: String, default: '' },
+  purpose:   { type: String, enum: ['login', 'link_phone'], default: 'login' },
+  userId:    { type: Schema.Types.ObjectId, ref: 'User' },
   attempts:  { type: Number, default: 0 },
   expiresAt: { type: Date, required: true },
 }, { timestamps: true })

@@ -77,6 +77,12 @@ export function CartDrawer() {
 
   const placeOrder = async () => {
     if (!session) { setGuestOpen(true); return }
+    if (session.user.role !== 'admin' && !session.user.phoneVerified) {
+      toast.error('Sign in with your phone number to place an order')
+      setOpen(false)
+      router.push('/auth/login?callbackUrl=/')
+      return
+    }
     if (!address.line1 || !address.city || !address.pincode) { toast.error('Fill in delivery address'); return }
     if (!items.length) { toast.error('Cart is empty'); return }
     if (totalPrice() < minOrder) { toast.error(`Minimum order is ₹${minOrder}`); return }

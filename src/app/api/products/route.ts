@@ -19,7 +19,14 @@ export async function GET(req: NextRequest) {
 
     if (category)          query.category = category
     if (featured === '1')  query.isFeatured = true
-    if (search)            query.name = { $regex: search, $options: 'i' }
+    if (search) {
+      const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      query.$or = [
+        { name: { $regex: escaped, $options: 'i' } },
+        { description: { $regex: escaped, $options: 'i' } },
+        { tags: { $regex: escaped, $options: 'i' } },
+      ]
+    }
 
     const [products, total] = await Promise.all([
       Product.find(query)

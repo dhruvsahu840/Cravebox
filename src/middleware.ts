@@ -6,7 +6,6 @@ export default withAuth(
     const { pathname } = req.nextUrl
     const token = req.nextauth.token
 
-    // Admin routes require admin role
     if (pathname.startsWith('/admin')) {
       if (!token) {
         const url = new URL('/auth/login', req.url)
@@ -27,6 +26,18 @@ export default withAuth(
       return NextResponse.redirect(url)
     }
 
+    // Customers without a verified phone must sign in again via Phone OTP
+    if (
+      token &&
+      token.role !== 'admin' &&
+      token.phoneVerified === false &&
+      (pathname.startsWith('/orders') || pathname.startsWith('/profile'))
+    ) {
+      const url = new URL('/auth/login', req.url)
+      url.searchParams.set('callbackUrl', pathname)
+      return NextResponse.redirect(url)
+    }
+
     return NextResponse.next()
   },
   {
@@ -36,7 +47,6 @@ export default withAuth(
     callbacks: {
       authorized: ({ token, req }) => {
         const { pathname } = req.nextUrl
-        // Let the function above handle redirects with clear messages
         if (pathname.startsWith('/admin')) return true
         if (pathname.startsWith('/orders') || pathname.startsWith('/profile')) return !!token
         return true

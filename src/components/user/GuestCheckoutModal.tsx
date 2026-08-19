@@ -20,10 +20,10 @@ export function GuestCheckoutModal({ open, onClose, onSuccess }: Props) {
   const sendOtp = async () => {
     if (!name.trim() || phone.length < 10) { toast.error('Enter name and valid phone'); return }
     setLoading(true)
-    const res = await fetch('/api/guest/otp', {
+    const res = await fetch('/api/auth/otp/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone, name: name.trim() }),
+      body: JSON.stringify({ phone, name: name.trim(), purpose: 'login' }),
     })
     const d = await res.json()
     setLoading(false)
@@ -37,9 +37,10 @@ export function GuestCheckoutModal({ open, onClose, onSuccess }: Props) {
   const verify = async () => {
     if (otp.length < 4) { toast.error('Enter the OTP'); return }
     setLoading(true)
-    const login = await signIn('credentials', {
+    const login = await signIn('phone-otp', {
       phone,
       otp,
+      name: name.trim(),
       redirect: false,
     })
     setLoading(false)
@@ -68,7 +69,7 @@ export function GuestCheckoutModal({ open, onClose, onSuccess }: Props) {
               <input className="input text-sm pl-9" placeholder="Phone number" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} />
             </div>
             <button onClick={sendOtp} disabled={loading} className="btn-primary w-full py-2.5 flex items-center justify-center gap-2">
-              {loading ? <Loader2 size={16} className="animate-spin" /> : 'Send OTP'}
+              {loading ? <Loader2 size={16} className="animate-spin" /> : 'Send WhatsApp OTP'}
             </button>
           </div>
         ) : (
