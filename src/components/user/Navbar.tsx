@@ -6,6 +6,7 @@ import { useCart } from '@/store/cartStore'
 import { Logo } from '@/components/shared/Logo'
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
 import { useState } from 'react'
+import { InstallButton } from '@/components/user/InstallButton';
 
 export function Navbar() {
   const { data: session } = useSession()
@@ -20,6 +21,9 @@ export function Navbar() {
         <Logo size="sm" />
 
         <div className="hidden md:flex items-center gap-1">
+          <div>
+            <InstallButton />
+          </div>
           <Link href="/" className="btn-ghost text-sm flex items-center gap-1.5">🍽️ Menu</Link>
           <Link href="/offers" className="btn-ghost text-sm flex items-center gap-1.5"><Tag size={15}/> Offers</Link>
           <Link href="/about" className="btn-ghost text-sm flex items-center gap-1.5">ℹ️ About</Link>

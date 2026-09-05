@@ -15,8 +15,8 @@ export const metadata: Metadata = {
   title: 'Lifepizza — Fresh Food Delivered Fast',
   description: 'Pizzas, Burgers, Sandwiches & Maggi delivered in 30 mins',
   icons: {
-    icon: '/icon.svg',
-    apple: '/icon.svg',
+    icon: '/icon.png',
+    apple: '/icon.png',
   },
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   openGraph: {
@@ -42,11 +42,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={jakarta.variable} suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/icon.svg" />
+        <link rel="icon" href="/icon.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/icon.png" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#16a34a" />
-        <script src="https://checkout.razorpay.com/v1/checkout.js" async />
+
+        <script
+          src="https://checkout.razorpay.com/v1/checkout.js"
+          async
+        />
       </head>
       <body className="font-sans">
         <Providers>

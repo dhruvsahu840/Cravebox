@@ -15,7 +15,7 @@ export function Logo({ size = 'md', showText = true, href = '/' }: LogoProps) {
   const content = (
     <div className="flex items-center gap-2.5 group">
       <Image
-        src="/icon.svg"
+        src="/icon.png"
         alt="Lifepizza"
         width={px}
         height={px}

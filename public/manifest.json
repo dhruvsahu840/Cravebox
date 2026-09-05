@@ -1,12 +1,21 @@
 {
-  "name": "Lifepizza — Food Delivery",
+  "name": "Lifepizza — Fresh Food Delivered Fast",
   "short_name": "Lifepizza",
-  "description": "Fresh food delivered in 30 mins · Bhopal",
+  "description": "Pizzas, Burgers, Sandwiches & Maggi delivered in 30 mins",
+
+  "id": "/",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#14532d",
+
+  "background_color": "#ffffff",
   "theme_color": "#16a34a",
+
   "icons": [
-    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    {
+      "src": "/icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
   ]
 }
