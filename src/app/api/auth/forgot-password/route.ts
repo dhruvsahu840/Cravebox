@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       await sendSms(user.phone, `Lifepizza password reset: ${link}`)
     }
 
-    const demo = process.env.ALLOW_DEMO_OTP === 'true' || process.env.NODE_ENV !== 'production'
+    const demo = process.env.ALLOW_DEMO_OTP === 'true';
     return NextResponse.json({
       ok: true,
       message: user.phone

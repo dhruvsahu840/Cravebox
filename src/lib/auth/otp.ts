@@ -42,7 +42,7 @@ export async function createAndSendOtp(opts: {
   const sms = wa.ok ? { ok: true as const } : await sendSms(phone, message)
   const delivered = wa.ok || sms.ok
 
-  const demo = process.env.ALLOW_DEMO_OTP === 'true' || process.env.NODE_ENV !== 'production'
+  const demo = process.env.ALLOW_DEMO_OTP === 'true';
   if (!delivered && !demo) {
     return {
       ok: false as const,
