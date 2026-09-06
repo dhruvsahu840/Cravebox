@@ -197,7 +197,7 @@ export function CartDrawer() {
                     )}
                     <p className="text-green-600 font-bold text-sm">₹{item.price * item.qty}</p>
                   </div>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 text-black">
                     <button onClick={() => updateQty(item._id, item.qty - 1, item.customizations)} className="w-7 h-7 bg-white border border-green-200 rounded-lg flex items-center justify-center hover:bg-green-600 hover:text-white hover:border-green-600 transition-colors">
                       <Minus size={12} />
                     </button>

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Package, ChefHat, Bike, CheckCircle, XCircle, ChevronRight, Loader2, RotateCcw } from 'lucide-react'
 import { Navbar } from '@/components/user/Navbar'
 import { PageBackground } from '@/components/user/PageBackground'
+import { BottomNav } from '@/components/user/BottomNav'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useCart } from '@/store/cartStore'
 import toast from 'react-hot-toast'
@@ -157,6 +158,7 @@ export default function OrdersPage() {
           </div>
         )}
       </div>
+      <BottomNav />
     </div>
   )
 }

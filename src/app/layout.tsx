@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/components/shared/Providers'
 import { Toaster } from 'react-hot-toast'
+import ServiceWorkerRegistration from "@/components/shared/ServiceWorkerRegistration"
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -52,31 +53,44 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           async
         />
       </head>
-      <body className="font-sans">
-        <Providers>
-          {children}
-          <Toaster
-            position="bottom-center"
-            gutter={12}
-            containerStyle={{ bottom: 80 }}
-            toastOptions={{
-              duration: 3000,
-              className: 'toast-anim',
-              style: {
-                background: 'var(--toast-bg, #fff)',
-                color: 'var(--toast-color, #14532d)',
-                border: '1px solid #bbf7d0',
-                borderRadius: '14px',
-                fontWeight: '600',
-                fontFamily: 'var(--font-jakarta)',
-                boxShadow: '0 8px 30px rgba(20,83,45,0.15)',
-              },
-              success: { iconTheme: { primary: '#16a34a', secondary: '#fff' } },
-              error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
-            }}
-          />
-        </Providers>
-      </body>
+    <body className="font-sans">
+  <ServiceWorkerRegistration />
+
+  <Providers>
+    {children}
+
+    <Toaster
+      position="bottom-center"
+      gutter={12}
+      containerStyle={{ bottom: 80 }}
+      toastOptions={{
+        duration: 3000,
+        className: "toast-anim",
+        style: {
+          background: "var(--toast-bg, #fff)",
+          color: "var(--toast-color, #14532d)",
+          border: "1px solid #bbf7d0",
+          borderRadius: "14px",
+          fontWeight: "600",
+          fontFamily: "var(--font-jakarta)",
+          boxShadow: "0 8px 30px rgba(20,83,45,0.15)",
+        },
+        success: {
+          iconTheme: {
+            primary: "#16a34a",
+            secondary: "#fff",
+          },
+        },
+        error: {
+          iconTheme: {
+            primary: "#ef4444",
+            secondary: "#fff",
+          },
+        },
+      }}
+    />
+  </Providers>
+</body>
     </html>
   )
 }

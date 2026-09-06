@@ -53,7 +53,7 @@ export default function HomePage() {
             <Link href="/terms" className="hover:text-green-600">Terms</Link>
             <Link href="/profile" className="hover:text-green-600">Profile</Link>
           </div>
-          <p className="text-gray-400 text-xs mt-3">📞 +91 98765 43210 · Made with ❤️ in India</p>
+          <p className="text-gray-400 text-xs mt-3">📞 9302642854 · Made with ❤️ in India</p>
         </footer>
       </div>
       <CartDrawer />

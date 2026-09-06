@@ -15,21 +15,62 @@ export function InstallButton() {
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null)
 
+  const [isInstalled, setIsInstalled] = useState(false)
+
   useEffect(() => {
-    const handler = (event: Event) => {
-      console.log("🔥 beforeinstallprompt fired!")
+    // Check if app is already running as an installed PWA
+    const checkInstalled = () => {
+      const standalone = window.matchMedia(
+        "(display-mode: standalone)"
+      ).matches
+
+      const iosStandalone =
+        (window.navigator as any).standalone === true
+
+      setIsInstalled(standalone || iosStandalone)
+    }
+
+    checkInstalled()
+
+    // beforeinstallprompt
+    const handleBeforeInstallPrompt = (event: Event) => {
+      console.log("🔥 beforeinstallprompt fired")
 
       event.preventDefault()
 
       setDeferredPrompt(event as BeforeInstallPromptEvent)
     }
 
-    window.addEventListener("beforeinstallprompt", handler)
+    // App successfully installed
+    const handleAppInstalled = () => {
+      console.log("✅ PWA installed")
+
+      setDeferredPrompt(null)
+      setIsInstalled(true)
+    }
+
+    window.addEventListener(
+      "beforeinstallprompt",
+      handleBeforeInstallPrompt
+    )
+
+    window.addEventListener(
+      "appinstalled",
+      handleAppInstalled
+    )
 
     console.log("👀 Waiting for install prompt...")
 
     return () => {
-      window.removeEventListener("beforeinstallprompt", handler)
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt
+      )
+
+      window.removeEventListener(
+        "appinstalled",
+        handleAppInstalled
+      )
     }
   }, [])
 
@@ -37,18 +78,51 @@ export function InstallButton() {
     console.log("Install clicked")
     console.log("Prompt:", deferredPrompt)
 
-    if (!deferredPrompt) {
-      console.log("❌ PWA install prompt is not available")
+    // Already installed
+    if (isInstalled) {
+      console.log("ℹ️ App is already installed")
       return
     }
 
-    await deferredPrompt.prompt()
+    // Browser has not provided install prompt
+    if (!deferredPrompt) {
+      console.log(
+        "❌ Install prompt is not available yet"
+      )
 
-    const { outcome } = await deferredPrompt.userChoice
+      alert(
+        "The install option is currently unavailable. Please open this website in Chrome and try again after a few seconds."
+      )
 
-    console.log("Install:", outcome)
+      return
+    }
 
-    setDeferredPrompt(null)
+    try {
+      await deferredPrompt.prompt()
+
+      const { outcome } =
+        await deferredPrompt.userChoice
+
+      console.log("Install result:", outcome)
+
+      if (outcome === "accepted") {
+        console.log("✅ User accepted installation")
+      } else {
+        console.log("❌ User dismissed installation")
+      }
+
+      setDeferredPrompt(null)
+    } catch (error) {
+      console.error(
+        "❌ Installation failed:",
+        error
+      )
+    }
+  }
+
+  // Don't show install button when already installed
+  if (isInstalled) {
+    return null
   }
 
   return (

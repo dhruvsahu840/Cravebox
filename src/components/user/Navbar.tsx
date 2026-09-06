@@ -20,7 +20,7 @@ export function Navbar() {
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         <Logo size="sm" />
 
-        <div className="hidden md:flex items-center gap-1">
+        <div className="hidden min-[1050px]:flex items-center gap-1">
           <div>
             <InstallButton />
           </div>
@@ -61,7 +61,7 @@ export function Navbar() {
           </button>
         </div>
 
-        <div className="flex md:hidden items-center gap-2">
+        <div className="flex min-[1050px]:hidden items-center gap-2">
           <ThemeToggle />
           <button
             onClick={() => document.dispatchEvent(new Event('open-cart'))}
@@ -79,7 +79,7 @@ export function Navbar() {
       </div>
 
       {open && (
-        <div className="md:hidden bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-t border-green-100 dark:border-gray-800 p-3 space-y-1">
+        <div className="min-[1050px]:hidden bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-t border-green-100 dark:border-gray-800 p-3 space-y-1">
           {[
             { href: '/', label: '🍽️ Menu' },
             { href: '/offers', label: '🏷️ Offers' },

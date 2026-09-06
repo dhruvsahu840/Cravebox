@@ -10,7 +10,7 @@ export function WhatsAppButton() {
 
   useEffect(() => { fetchSettings() }, [fetchSettings])
 
-  const wa = String(whatsapp).replace(/\D/g, '') || STORE.whatsapp
+  const wa = `91${String(whatsapp).replace(/\D/g, '').replace(/^91/, '')}` || STORE.whatsapp
 
   return (
     <a

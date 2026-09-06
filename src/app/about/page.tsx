@@ -32,7 +32,7 @@ export default function AboutPage() {
             { icon: Clock, title: '30-min delivery', desc: 'Fast & reliable across Bhopal' },
             { icon: Heart, title: 'Made fresh', desc: 'Prepared after you order' },
             { icon: MapPin, title: 'Bhopal, MP', desc: 'Serving the city we love' },
-            { icon: Phone, title: 'Always reachable', desc: '+91 98765 43210' },
+            { icon: Phone, title: 'Always reachable', desc: '9302642854' },
           ].map(item => (
             <div key={item.title} className="card p-5 flex items-start gap-3">
               <div className="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-900/40 flex items-center justify-center shrink-0">

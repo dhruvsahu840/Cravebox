@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/user/Navbar'
 import { PageBackground } from '@/components/user/PageBackground'
+import { BottomNav } from '@/components/user/BottomNav'
 import { MapPin, Plus, Trash2, Star, Loader2, User, Heart } from 'lucide-react'
 import { useWishlist } from '@/store/wishlistStore'
 import { useCart } from '@/store/cartStore'
@@ -77,7 +78,7 @@ export default function ProfilePage() {
   )
 
   return (
-    <div className="page-shell min-h-screen">
+    <div className="page-shell min-h-screen pb-20">
       <PageBackground />
       <Navbar />
       <div className="relative z-10 max-w-2xl mx-auto px-4 py-8">
@@ -161,6 +162,7 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+      <BottomNav />
     </div>
   )
 }
