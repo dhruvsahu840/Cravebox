@@ -175,7 +175,7 @@ The tracking page (`/orders/[id]`) polls the server every 15 seconds for status 
 
 ---
 
-## 🔮 Roadmap / Extensions
+## 🔮 Roadmap / Extensions 
 
 - [ ] OTP phone login (Twilio / MSG91)
 - [ ] Push notifications when order status changes
