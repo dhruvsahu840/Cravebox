@@ -137,11 +137,11 @@ export async function POST(req: NextRequest) {
         method,
         status: 'pending',
       },
-      status: method === 'cod' ? 'confirmed' : 'pending',
+      status: 'pending',
       statusHistory: [{
-        status: method === 'cod' ? 'confirmed' : 'pending',
+        status: 'pending',
         time: new Date(),
-        note: method === 'cod' ? 'Order placed (Cash on delivery)' : 'Awaiting online payment',
+        note: method === 'cod' ? 'Order placed (Cash on delivery) — awaiting confirmation' : 'Awaiting online payment',
       }],
       estimatedDelivery: estimated,
     })

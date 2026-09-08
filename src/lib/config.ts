@@ -8,7 +8,7 @@ export const STORE = {
   deliveryFee: 40,
   taxRate: 0.05,
   openHour: 10,
-  closeHour: 23,
+  closeHour: 17,
   loyaltyPointsPer100: 10,
   firstOrderCoupon: 'WELCOME20',
 }

@@ -48,8 +48,10 @@ export async function POST(req: NextRequest) {
     order.payment.razorpayPaymentId = razorpay_payment_id
     order.payment.razorpaySignature = razorpay_signature
     order.payment.paidAt            = new Date()
-    order.status                    = 'confirmed'
-    order.statusHistory.push({ status: 'confirmed', time: new Date(), note: 'Payment received' })
+    // Stay pending until admin confirms — payment paid ≠ kitchen accepted
+    if (order.status === 'pending') {
+      order.statusHistory.push({ status: 'pending', time: new Date(), note: 'Payment received — awaiting confirmation' })
+    }
     await order.save()
 
     if (order.couponCode) {
