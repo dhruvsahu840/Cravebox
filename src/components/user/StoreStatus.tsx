@@ -6,8 +6,12 @@ export function StoreStatus() {
   const [status, setStatus] = useState<{ open: boolean; label: string; sub: string } | null>(null)
 
   useEffect(() => {
-    fetch('/api/store/status').then(r => r.json()).then(setStatus)
-  }, [])
+  fetch('/api/store/status', {
+    cache: 'no-store',
+  })
+    .then(r => r.json())
+    .then(setStatus)
+}, [])
 
   if (!status) return null
 
