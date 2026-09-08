@@ -102,14 +102,14 @@ export default function LoginForm() {
               onClick={() => setMode('phone')}
               className={`py-2 rounded-lg text-sm font-bold transition-all ${mode === 'phone' ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500'}`}
             >
-              Phone OTP
+              USER LOGIN
             </button>
             <button
               type="button"
               onClick={() => setMode('email')}
               className={`py-2 rounded-lg text-sm font-bold transition-all ${mode === 'email' ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500'}`}
             >
-              Email & password
+              ADMIN LOGIN 
             </button>
           </div>
 
@@ -133,23 +133,14 @@ export default function LoginForm() {
                     />
                   </div>
                 </div>
-                <div>
-                  <label className="text-sm font-semibold text-gray-600 mb-1.5 block">Email (optional)</label>
-                  <div className="relative">
-                    <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="email"
-                      className="input pl-9"
-                      placeholder="you@example.com"
-                      value={optionalEmail}
-                      onChange={e => setOptionalEmail(e.target.value)}
-                    />
-                  </div>
-                </div>
                 <button onClick={sendOtp} disabled={loading} className="btn-primary w-full py-3 flex items-center justify-center gap-2">
                   {loading ? <Loader2 size={18} className="animate-spin" /> : null}
                   {loading ? 'Sending…' : 'Send WhatsApp OTP'}
                 </button>
+                 <p className="text-[11px] text-center text-gray-400">
+                For User's accounts (phone and otp).  Admin use email and password.
+              </p>
+
               </>
             ) : (
               <>
