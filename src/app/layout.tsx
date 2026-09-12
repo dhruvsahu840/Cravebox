@@ -13,8 +13,18 @@ const jakarta = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'Lifepizza — Fresh Food Delivered Fast',
-  description: 'Pizzas, Burgers, Sandwiches & Maggi delivered in 30 mins',
+  title: 'Lifepizza — Order Fresh Pizza, Burgers & Fast Food in bijawar',
+  description: 'Order fresh pizzas, burgers, sandwiches & maggi online at Lifepizza. Fast 30-minute food delivery across bijawar.',
+  keywords: [
+    'Lifepizza',
+    'Lifepizza bijawar',
+    'pizza delivery bijawar',
+    'order food online bijawar',
+    'burgers in bijawar',
+    'fast food delivery bijawar',
+    'late night food delivery bijawar',
+    'sandwiches bijawar',
+  ],
   verification: {
     google: 'YxU77SZlOwi5S2oG_ftJeJONhtNOEE4Ipte8V7Yt7YI',
   },
@@ -24,8 +34,8 @@ export const metadata: Metadata = {
   },
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   openGraph: {
-    title: 'Lifepizza — Fresh Food Delivered Fast',
-    description: 'Order pizzas, burgers, sandwiches & maggi. Delivered in 30 mins · Bhopal',
+    title: 'Lifepizza — Order Fresh Pizza, Burgers & Fast Food in bijawar',
+    description: 'Order pizzas, burgers, sandwiches & maggi. Delivered in 30 mins · bijawar',
     siteName: 'Lifepizza',
     images: [
       { url: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1200&h=630&fit=crop&q=80', width: 1200, height: 630, alt: 'Lifepizza — Fresh Food Delivery' },
@@ -36,13 +46,27 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Lifepizza — Fresh Food Delivered Fast',
-    description: 'Order food online. 30-min delivery in Bhopal.',
+    title: 'Lifepizza — Order Fresh Pizza & Fast Food in bijawar',
+    description: 'Order food online. 30-min delivery in bijawar.',
     images: ['https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1200&q=80'],
   },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Restaurant',
+    name: 'Lifepizza',
+    url: 'https://lifepizza.vercel.app',
+    description: 'Fresh pizzas, burgers, sandwiches & maggi delivered fast in bijawar.',
+    servesCuisine: ['Pizza', 'Burgers', 'Sandwiches', 'Fast Food'],
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: 'bijawar',
+      addressCountry: 'IN',
+    },
+  }
+
   return (
     <html lang="en" className={jakarta.variable} suppressHydrationWarning>
       <head>
@@ -50,6 +74,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" href="/icon.png" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#16a34a" />
+
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
 
         <script
           src="https://checkout.razorpay.com/v1/checkout.js"

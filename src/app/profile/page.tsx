@@ -18,7 +18,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
-  const [form, setForm] = useState({ label: 'Home', line1: '', city: 'Bhopal', pincode: '' })
+  const [form, setForm] = useState({ label: 'Home', line1: '', city: 'bijawar', pincode: '' })
   const wishlist = useWishlist(s => s.items)
   const addItem = useCart(s => s.addItem)
 
@@ -52,7 +52,7 @@ export default function ProfilePage() {
       body: JSON.stringify(form),
     })
     const d = await res.json()
-    if (res.ok) { setUser((u: any) => ({ ...u, addresses: d.addresses })); setShowAdd(false); setForm({ label: 'Home', line1: '', city: 'Bhopal', pincode: '' }); toast.success('Address saved!') }
+    if (res.ok) { setUser((u: any) => ({ ...u, addresses: d.addresses })); setShowAdd(false); setForm({ label: 'Home', line1: '', city: 'bijawar', pincode: '' }); toast.success('Address saved!') }
     else toast.error(d.error)
   }
 

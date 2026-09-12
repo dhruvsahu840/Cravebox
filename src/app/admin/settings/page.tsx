@@ -17,7 +17,7 @@ export default function AdminSettingsPage() {
     phone: '',
     whatsapp: '',
     adminNotifyPhone: '',
-    city: 'Bhopal',
+    city: 'bijawar',
     openHour: 10,
     closeHour: 23,
   })
@@ -35,7 +35,7 @@ export default function AdminSettingsPage() {
             phone: d.settings.phone || '',
             whatsapp: d.settings.whatsapp || '',
             adminNotifyPhone: d.settings.adminNotifyPhone || '',
-            city: d.settings.city || 'Bhopal',
+            city: d.settings.city || 'bijawar',
             openHour: d.settings.openHour ?? 10,
             closeHour: d.settings.closeHour ?? 23,
           })
@@ -76,7 +76,7 @@ export default function AdminSettingsPage() {
           phone: d.settings.phone || '',
           whatsapp: d.settings.whatsapp || '',
           adminNotifyPhone: d.settings.adminNotifyPhone || '',
-          city: d.settings.city || 'Bhopal',
+          city: d.settings.city || 'bijawar',
           openHour: d.settings.openHour ?? 10,
           closeHour: d.settings.closeHour ?? 23,
         })

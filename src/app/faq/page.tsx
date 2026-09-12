@@ -4,7 +4,7 @@ import { ChevronDown } from 'lucide-react'
 import Link from 'next/link'
 
 const FAQS = [
-  { q: 'How long does delivery take?', a: 'Most orders arrive in 25–35 minutes across Bhopal. You can track your order live on the order detail page.' },
+  { q: 'How long does delivery take?', a: 'Most orders arrive in 25–35 minutes across bijawar. You can track your order live on the order detail page.' },
   { q: 'What is the minimum order value?', a: 'Minimum order is ₹99. Orders above ₹299 get free delivery.' },
   { q: 'Can I pay with cash?', a: 'Yes! We accept Cash on Delivery (COD) as well as online payments via Razorpay (UPI, cards, wallets).' },
   { q: 'How do I cancel my order?', a: 'Go to My Orders and tap Cancel order on any order that is still pending (before the kitchen confirms it). Once confirmed or being prepared, cancellation is no longer available — contact us on WhatsApp for help.' },

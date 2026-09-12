@@ -13,7 +13,7 @@ export default function AboutPage() {
           <h1 className="text-3xl sm:text-4xl font-extrabold text-green-900 dark:text-white mb-3">
             About <span className="text-green-600">Lifepizza</span>
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 text-lg">Fresh food, fast delivery — made with love in Bhopal</p>
+          <p className="text-gray-500 dark:text-gray-400 text-lg">Fresh food, fast delivery — made with love in bijawar</p>
         </div>
 
         <div className="card p-6 sm:p-8 mb-6 space-y-4">
@@ -29,9 +29,9 @@ export default function AboutPage() {
 
         <div className="grid sm:grid-cols-2 gap-4 mb-8">
           {[
-            { icon: Clock, title: '30-min delivery', desc: 'Fast & reliable across Bhopal' },
+            { icon: Clock, title: '30-min delivery', desc: 'Fast & reliable across bijawar' },
             { icon: Heart, title: 'Made fresh', desc: 'Prepared after you order' },
-            { icon: MapPin, title: 'Bhopal, MP', desc: 'Serving the city we love' },
+            { icon: MapPin, title: 'bijawar, MP', desc: 'Serving the city we love' },
             { icon: Phone, title: 'Always reachable', desc: '9302642854' },
           ].map(item => (
             <div key={item.title} className="card p-5 flex items-start gap-3">

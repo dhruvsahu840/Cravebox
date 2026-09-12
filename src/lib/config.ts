@@ -2,7 +2,7 @@ export const STORE = {
   name: 'Lifepizza',
   phone: '+919876543210',
   whatsapp: '919876543210',
-  city: 'Bhopal',
+  city: 'bijawar',
   freeDeliveryMin: 299,
   minOrder: 99,
   deliveryFee: 40,

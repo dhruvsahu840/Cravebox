@@ -25,7 +25,7 @@ export function Hero() {
       <div className="relative z-10 w-full max-w-6xl mx-auto px-4 py-8 sm:py-14 md:py-16 text-center animate-fade-up">
         <span className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 text-white text-[11px] sm:text-xs font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full tracking-wide mb-4 sm:mb-6">
           <Sparkles size={14} className="text-yellow-300" />
-          4.8 rated · 2,000+ happy customers · Bhopal
+          4.8 rated · 2,000+ happy customers · bijawar
         </span>
 
         <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold text-white mb-2 sm:mb-4 leading-[1.15] tracking-tight">

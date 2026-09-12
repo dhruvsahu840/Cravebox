@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { Clock } from 'lucide-react'
 
 const POSTS = [
-  { slug: 'best-pizza-bhopal', title: 'Best Pizzas in Bhopal — Our Top Picks', date: 'Jun 2026', emoji: '🍕', excerpt: 'From classic Margherita to loaded veggie supreme — discover what makes Lifepizza pizzas special.' },
+  { slug: 'best-pizza-bijawar', title: 'Best Pizzas in bijawar — Our Top Picks', date: 'Jun 2026', emoji: '🍕', excerpt: 'From classic Margherita to loaded veggie supreme — discover what makes Lifepizza pizzas special.' },
   { slug: 'late-night-maggi', title: 'Late Night Maggi Cravings? We Got You', date: 'May 2026', emoji: '🍜', excerpt: 'Why our masala maggi is the perfect midnight snack delivered in 30 minutes.' },
   { slug: 'healthy-eating', title: 'Eating Healthy While Ordering In', date: 'Apr 2026', emoji: '🥗', excerpt: 'Tips for choosing veg, lighter options, and balanced meals from our menu.' },
 ]
@@ -16,7 +16,7 @@ export default function BlogPage() {
       <Navbar />
       <div className="relative z-10 max-w-3xl mx-auto px-4 py-10">
         <h1 className="text-3xl font-extrabold text-green-900 dark:text-white mb-2">Food Stories</h1>
-        <p className="text-gray-500 dark:text-gray-400 mb-8">Tips, recipes & Bhopal food culture</p>
+        <p className="text-gray-500 dark:text-gray-400 mb-8">Tips, recipes & bijawar food culture</p>
         <div className="space-y-4">
           {POSTS.map(p => (
             <article key={p.slug} className="card p-5 hover:shadow-card-hover transition-shadow">

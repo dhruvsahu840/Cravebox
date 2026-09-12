@@ -43,7 +43,7 @@ export default function HomePage() {
           <p className="text-green-900 dark:text-green-100 font-extrabold text-xl mb-1 tracking-tight">
             🍕 Life<span className="text-green-600">pizza</span>
           </p>
-          <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Fresh food delivered to your door · Bhopal, MP</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Fresh food delivered to your door · bijawar, MP</p>
           <div className="flex flex-wrap justify-center gap-4 mt-3 text-xs text-gray-400">
             <Link href="/about" className="hover:text-green-600">About</Link>
             <Link href="/offers" className="hover:text-green-600">Offers</Link>

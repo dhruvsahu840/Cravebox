@@ -50,7 +50,7 @@ export default function InvoicePage() {
         {order.discount > 0 && <div className="flex justify-between text-green-600"><span>Discount</span><span>−₹{order.discount}</span></div>}
         <div className="flex justify-between font-black text-lg pt-2 text-gray-900"><span>Total</span><span className="text-green-600">₹{order.total}</span></div>
       </div>
-      <p className="text-xs text-gray-500 mt-8 text-center">Thank you for ordering from Lifepizza · Bhopal, MP</p>
+      <p className="text-xs text-gray-500 mt-8 text-center">Thank you for ordering from Lifepizza · bijawar, MP</p>
     </div>
   )
 }

@@ -282,7 +282,7 @@ const StoreSettingsSchema = new Schema<IStoreSettings>({
   phone:            { type: String, default: '' },
   whatsapp:         { type: String, default: '' },
   adminNotifyPhone: { type: String, default: '' },
-  city:             { type: String, default: 'Bhopal' },
+  city:             { type: String, default: 'bijawar' },
   openHour:         { type: Number, default: 10, min: 0, max: 23 },
   closeHour:        { type: Number, default: 23, min: 1, max: 24 },
 }, { timestamps: true })
