@@ -148,7 +148,7 @@ export default function LoginForm() {
                 <input
                   className="input text-center text-2xl tracking-[0.4em] font-bold"
                   placeholder="----"
-                  maxLength={4}
+                  maxLength={6}
                   value={otp}
                   onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
                 />

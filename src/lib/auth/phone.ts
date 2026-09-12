@@ -8,6 +8,8 @@ export function isValidIndianPhone(phone: string): boolean {
   return /^[6-9]\d{9}$/.test(p)
 }
 
+/** Formats number to full E.164 string for Twilio (+918602355924) */
 export function toE164India(phone: string): string {
-  return `+91${normalizePhone(phone)}`
+  const digits = normalizePhone(phone)
+  return `+91${digits}`
 }

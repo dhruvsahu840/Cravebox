@@ -1,17 +1,10 @@
-import bcrypt from 'bcryptjs'
+import twilio from 'twilio'
 import { connectDB } from '@/lib/db'
 import { OtpSession } from '@/models'
 import { sendWhatsApp, sendSms } from '@/lib/notify'
-import { isValidIndianPhone, normalizePhone } from '@/lib/auth/phone'
+import { isValidIndianPhone, normalizePhone, toE164India } from '@/lib/auth/phone'
 
 export type OtpPurpose = 'login' | 'link_phone'
-
-const OTP_TTL_MS = 5 * 60_000
-const MAX_ATTEMPTS = 5
-
-// TEMPORARY: Demo OTP works in production too.
-// Change this to false after configuring WhatsApp/SMS.
-const DEMO_OTP_ENABLED = true
 
 export async function createAndSendOtp(opts: {
   phone: string
@@ -31,50 +24,34 @@ export async function createAndSendOtp(opts: {
     }
   }
 
-  // Generate 4-digit OTP
-  const otp = String(Math.floor(1000 + Math.random() * 9000))
-
-  // Hash OTP before storing it in database
-  const otpHash = await bcrypt.hash(otp, 10)
-
-  const expiresAt = new Date(Date.now() + OTP_TTL_MS)
   const purpose = opts.purpose || 'login'
 
-  // Delete previous OTP for this phone/purpose
-  await OtpSession.deleteMany({
-    phone,
-    purpose,
-  })
+  // Clean up existing pending sessions for this phone/purpose
+  await OtpSession.deleteMany({ phone, purpose })
 
-  // Save new OTP session
+  // Save pending session metadata in MongoDB
   await OtpSession.create({
     phone,
-    otpHash,
+    otpHash: 'TWILIO_VERIFY_MANAGED', // Handled remotely by Twilio Verify API
     name: (opts.name || '').trim().slice(0, 60),
     purpose,
     userId: opts.userId || undefined,
     attempts: 0,
-    expiresAt,
+    expiresAt: new Date(Date.now() + 10 * 60_000),
   })
 
-  const message = `Your LifePizza OTP is ${otp}. Valid for 5 minutes. Do not share this code.`
+  // Try WhatsApp Delivery via Twilio Verify
+  const wa = await sendWhatsApp(phone)
 
-  // Try WhatsApp first
-  const wa = await sendWhatsApp(phone, message)
-
-  // If WhatsApp fails, try SMS
-  const sms = wa.ok
-    ? { ok: true as const }
-    : await sendSms(phone, message)
+  // Fallback to SMS via Twilio Verify if WhatsApp fails
+  const sms = wa.ok ? { ok: true as const } : await sendSms(phone)
 
   const delivered = wa.ok || sms.ok
 
-  // If WhatsApp/SMS failed AND demo mode is disabled
-  if (!delivered && !DEMO_OTP_ENABLED) {
+  if (!delivered) {
     return {
       ok: false as const,
-      error:
-        'Could not send WhatsApp OTP. Configure TWILIO_WHATSAPP_FROM (or SMS fallback).',
+      error: wa.error || sms.error || 'Could not send verification OTP',
       status: 503,
     }
   }
@@ -82,96 +59,63 @@ export async function createAndSendOtp(opts: {
   return {
     ok: true as const,
     phone,
-
-    message: delivered
-      ? wa.ok
-        ? 'OTP sent on WhatsApp'
-        : 'OTP sent via SMS'
-      : 'OTP generated (demo mode)',
-
-    channel: wa.ok
-      ? 'whatsapp'
-      : sms.ok
-        ? 'sms'
-        : 'demo',
-
-    // Return OTP only when using demo mode
-    // and WhatsApp/SMS delivery failed.
-    ...(DEMO_OTP_ENABLED && !delivered
-      ? {
-          demoOtp: otp,
-        }
-      : {}),
+    message: wa.ok ? 'OTP sent on WhatsApp' : 'OTP sent via SMS',
+    channel: wa.ok ? 'whatsapp' : 'sms',
   }
 }
 
 export async function verifyOtpCode(opts: {
   phone: string
   otp: string
-  purpose?: OtpPurpose
+  purpose?: string
 }) {
-  await connectDB()
+  const code = String(opts.otp || '').trim()
 
-  const phone = normalizePhone(opts.phone)
-  const otp = String(opts.otp || '').trim()
-  const purpose = opts.purpose || 'login'
-
-  if (!isValidIndianPhone(phone) || otp.length < 4) {
+  if (!isValidIndianPhone(opts.phone) || code.length < 4) {
     return {
       ok: false as const,
-      error: 'Invalid phone or OTP',
+      error: 'Invalid phone or OTP code',
     }
   }
 
-  const session = await OtpSession.findOne({
-    phone,
-    purpose,
-  }).sort({
-    createdAt: -1,
-  })
+  const sid = process.env.TWILIO_ACCOUNT_SID
+  const token = process.env.TWILIO_AUTH_TOKEN
+  const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID
 
-  if (!session || session.expiresAt.getTime() < Date.now()) {
+  if (!sid || !token || !serviceSid) {
     return {
       ok: false as const,
-      error: 'OTP expired. Request a new one.',
+      error: 'Twilio Verify settings unconfigured in environment',
     }
   }
 
-  if (session.attempts >= MAX_ATTEMPTS) {
+  try {
+    const client = twilio(sid, token)
+    const formattedPhone = toE164India(opts.phone) // Produces +918602355924
+
+    const check = await client.verify.v2
+      .services(serviceSid)
+      .verificationChecks.create({
+        to: formattedPhone,
+        code: code,
+      })
+
+    if (check.status !== 'approved') {
+      return {
+        ok: false as const,
+        error: 'Invalid or expired OTP code',
+      }
+    }
+
+    return {
+      ok: true as const,
+      phone: opts.phone,
+    }
+  } catch (err: any) {
+    console.error('[verifyOtpCode Error]:', err?.message || err)
     return {
       ok: false as const,
-      error: 'Too many attempts. Request a new OTP.',
+      error: err?.message || 'Verification check failed',
     }
-  }
-
-  const valid = await bcrypt.compare(
-    otp,
-    session.otpHash
-  )
-
-  if (!valid) {
-    session.attempts += 1
-    await session.save()
-
-    return {
-      ok: false as const,
-      error: 'Invalid OTP',
-    }
-  }
-
-  const name = session.name || ''
-  const userId = session.userId?.toString()
-
-  // Delete OTP after successful verification
-  await OtpSession.deleteMany({
-    phone,
-    purpose,
-  })
-
-  return {
-    ok: true as const,
-    phone,
-    name,
-    userId,
   }
 }

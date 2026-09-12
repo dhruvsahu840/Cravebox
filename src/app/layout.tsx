@@ -15,6 +15,9 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: 'Lifepizza — Fresh Food Delivered Fast',
   description: 'Pizzas, Burgers, Sandwiches & Maggi delivered in 30 mins',
+  verification: {
+    google: 'YxU77SZlOwi5S2oG_ftJeJONhtNOEE4Ipte8V7Yt7YI',
+  },
   icons: {
     icon: '/icon.png',
     apple: '/icon.png',
@@ -53,44 +56,44 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           async
         />
       </head>
-    <body className="font-sans">
-  <ServiceWorkerRegistration />
+      <body className="font-sans">
+        <ServiceWorkerRegistration />
 
-  <Providers>
-    {children}
+        <Providers>
+          {children}
 
-    <Toaster
-      position="bottom-center"
-      gutter={12}
-      containerStyle={{ bottom: 80 }}
-      toastOptions={{
-        duration: 3000,
-        className: "toast-anim",
-        style: {
-          background: "var(--toast-bg, #fff)",
-          color: "var(--toast-color, #14532d)",
-          border: "1px solid #bbf7d0",
-          borderRadius: "14px",
-          fontWeight: "600",
-          fontFamily: "var(--font-jakarta)",
-          boxShadow: "0 8px 30px rgba(20,83,45,0.15)",
-        },
-        success: {
-          iconTheme: {
-            primary: "#16a34a",
-            secondary: "#fff",
-          },
-        },
-        error: {
-          iconTheme: {
-            primary: "#ef4444",
-            secondary: "#fff",
-          },
-        },
-      }}
-    />
-  </Providers>
-</body>
+          <Toaster
+            position="bottom-center"
+            gutter={12}
+            containerStyle={{ bottom: 80 }}
+            toastOptions={{
+              duration: 3000,
+              className: "toast-anim",
+              style: {
+                background: "var(--toast-bg, #fff)",
+                color: "var(--toast-color, #14532d)",
+                border: "1px solid #bbf7d0",
+                borderRadius: "14px",
+                fontWeight: "600",
+                fontFamily: "var(--font-jakarta)",
+                boxShadow: "0 8px 30px rgba(20,83,45,0.15)",
+              },
+              success: {
+                iconTheme: {
+                  primary: "#16a34a",
+                  secondary: "#fff",
+                },
+              },
+              error: {
+                iconTheme: {
+                  primary: "#ef4444",
+                  secondary: "#fff",
+                },
+              },
+            }}
+          />
+        </Providers>
+      </body>
     </html>
   )
 }

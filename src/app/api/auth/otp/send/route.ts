@@ -7,7 +7,10 @@ import { createAndSendOtp, OtpPurpose } from '@/lib/auth/otp'
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') || 'local'
   if (!rateLimit(`auth-otp:${ip}`, 5, 60_000)) {
-    return NextResponse.json({ error: 'Too many OTP requests. Try again in a minute.' }, { status: 429 })
+    return NextResponse.json(
+      { error: 'Too many OTP requests. Try again in a minute.' },
+      { status: 429 }
+    )
   }
 
   try {
@@ -41,7 +44,6 @@ export async function POST(req: NextRequest) {
       ok: true,
       message: result.message,
       channel: result.channel,
-      ...(result.demoOtp ? { demoOtp: result.demoOtp } : {}),
     })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Failed to send OTP' }, { status: 500 })

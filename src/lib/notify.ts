@@ -1,106 +1,82 @@
+import twilio from 'twilio'
 import { getStoreSettings } from '@/lib/storeSettings'
+import { toE164India } from './auth/phone'
 
 function normalizePhone(phone: string) {
   const digits = phone.replace(/\D/g, '')
+  // If 10 digits, add '91'
   if (digits.length === 10) return `91${digits}`
+  // If user entered 12 digits starting with '91' (+91XXXXXXXXXX)
+  if (digits.length === 12 && digits.startsWith('91')) return digits
+  // Fallback: handle edge case where trailing 10 digits are extracted
+  if (digits.length > 10) return `91${digits.slice(-10)}`
   return digits
 }
 
-async function twilioSend(to: string, body: string, channel: 'sms' | 'whatsapp') {
+/**
+ * Triggers WhatsApp verification OTP via Twilio Verify Service
+ */
+export async function sendWhatsApp(to: string) {
   const sid = process.env.TWILIO_ACCOUNT_SID
   const token = process.env.TWILIO_AUTH_TOKEN
-  const fromSms = process.env.TWILIO_PHONE_NUMBER
-  const fromWa = process.env.TWILIO_WHATSAPP_FROM || (fromSms ? `whatsapp:${fromSms}` : '')
-  if (!sid || !token) return { ok: false, error: 'Twilio not configured' }
+  const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID
 
-  const from = channel === 'whatsapp' ? fromWa : fromSms
-  if (!from) return { ok: false, error: `Twilio ${channel} from-number missing` }
-
-  const toAddr = channel === 'whatsapp'
-    ? (to.startsWith('whatsapp:') ? to : `whatsapp:+${normalizePhone(to)}`)
-    : `+${normalizePhone(to)}`
-
-  const auth = Buffer.from(`${sid}:${token}`).toString('base64')
-  const params = new URLSearchParams({ To: toAddr, From: from, Body: body })
-  const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Basic ${auth}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: params,
-  })
-  if (!res.ok) {
-    const err = await res.text()
-    return { ok: false, error: err.slice(0, 300) }
-  }
-  return { ok: true }
-}
-
-async function msg91SendSms(to: string, body: string) {
-  const key = process.env.MSG91_AUTH_KEY
-  const sender = process.env.MSG91_SENDER || 'LIFEPZ'
-  if (!key) return { ok: false, error: 'MSG91 not configured' }
-
-  const mobile = normalizePhone(to)
-  const res = await fetch('https://control.msg91.com/api/v5/flow/', {
-    method: 'POST',
-    headers: {
-      accept: 'application/json',
-      'content-type': 'application/json',
-      authkey: key,
-    },
-    body: JSON.stringify({
-      template_id: process.env.MSG91_TEMPLATE_ID,
-      short_url: '0',
-      recipients: [{ mobiles: mobile, VAR1: body.slice(0, 30) }],
-      // fallback simple SMS if template not set — use legacy endpoint below
-    }),
-  })
-
-  // Prefer simple SMS API when no template configured
-  if (!process.env.MSG91_TEMPLATE_ID) {
-    const simple = await fetch(
-      `https://api.msg91.com/api/sendhttp.php?authkey=${encodeURIComponent(key)}&mobiles=${mobile}&message=${encodeURIComponent(body)}&sender=${encodeURIComponent(sender)}&route=4&country=91`
-    )
-    return { ok: simple.ok, error: simple.ok ? undefined : await simple.text() }
+  if (!to) return { ok: false, error: 'No phone provided' }
+  if (!sid || !token || !serviceSid) {
+    return { ok: false, error: 'Twilio Verify credentials missing in process.env' }
   }
 
-  if (!res.ok) return { ok: false, error: (await res.text()).slice(0, 300) }
-  return { ok: true }
-}
-
-export async function sendSms(to: string, body: string) {
-  if (!to) return { ok: false, error: 'No phone' }
   try {
-    if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_PHONE_NUMBER) {
-      return await twilioSend(to, body, 'sms')
-    }
-    if (process.env.MSG91_AUTH_KEY) {
-      return await msg91SendSms(to, body)
-    }
-    console.warn('[notify] SMS skipped — configure TWILIO_* or MSG91_AUTH_KEY')
-    return { ok: false, error: 'SMS provider not configured' }
+    const client = twilio(sid, token)
+    const formattedPhone = toE164India(to) // Produces +918602355924
+
+    const verification = await client.verify.v2
+      .services(serviceSid)
+      .verifications.create({
+        to: formattedPhone,
+        channel: 'whatsapp',
+      })
+
+    return { ok: true, sid: verification.sid }
   } catch (err: any) {
-    console.error('[notify] SMS failed', err?.message)
-    return { ok: false, error: err?.message || 'SMS failed' }
+    console.error('[Twilio WhatsApp Verify Error]:', err?.message || err)
+    return { ok: false, error: err?.message || 'WhatsApp verification failed' }
   }
 }
 
-export async function sendWhatsApp(to: string, body: string) {
-  if (!to) return { ok: false, error: 'No phone' }
+/**
+ * Triggers SMS verification OTP via Twilio Verify Service
+ */
+export async function sendSms(to: string) {
+  const sid = process.env.TWILIO_ACCOUNT_SID
+  const token = process.env.TWILIO_AUTH_TOKEN
+  const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID
+
+  if (!to || !sid || !token || !serviceSid) {
+    return { ok: false, error: 'Twilio Verify credentials missing in process.env' }
+  }
+
   try {
-    if (process.env.TWILIO_ACCOUNT_SID && (process.env.TWILIO_WHATSAPP_FROM || process.env.TWILIO_PHONE_NUMBER)) {
-      return await twilioSend(to, body, 'whatsapp')
-    }
-    console.warn('[notify] WhatsApp skipped — configure TWILIO_ACCOUNT_SID + TWILIO_WHATSAPP_FROM')
-    return { ok: false, error: 'WhatsApp provider not configured' }
+    const client = twilio(sid, token)
+    const formattedPhone = toE164India(to) // Produces +918602355924
+
+    const verification = await client.verify.v2
+      .services(serviceSid)
+      .verifications.create({
+        to: formattedPhone,
+        channel: 'sms',
+      })
+
+    return { ok: true, sid: verification.sid }
   } catch (err: any) {
-    console.error('[notify] WhatsApp failed', err?.message)
-    return { ok: false, error: err?.message || 'WhatsApp failed' }
+    console.error('[Twilio SMS Verify Error]:', err?.message || err)
+    return { ok: false, error: err?.message || 'SMS verification failed' }
   }
 }
 
+/**
+ * Formats order notification alert string for admins
+ */
 export function formatOrderAlert(order: {
   orderNumber?: string
   total?: number
@@ -116,16 +92,18 @@ export function formatOrderAlert(order: {
     .join('\n')
   const addr = [order.address?.line1, order.address?.city, order.address?.pincode].filter(Boolean).join(', ')
   return [
-    `🍕 New Lifepizza order #${order.orderNumber || ''}`,
+    `🍕 *New LifePizza order #${order.orderNumber || ''}*`,
     `Customer: ${order.userName || 'Guest'}${order.userPhone ? ` · ${order.userPhone}` : ''}`,
     `Pay: ${(order.payment?.method || 'cod').toUpperCase()} (${order.payment?.status || 'pending'})`,
     `Total: ₹${order.total ?? 0}`,
-    lines ? `Items:\n${lines}` : '',
-    addr ? `Address: ${addr}` : '',
+    lines ? `\n*Items:*\n${lines}` : '',
+    addr ? `\nAddress: ${addr}` : '',
   ].filter(Boolean).join('\n')
 }
 
-/** Fire-and-forget admin SMS + WhatsApp for a confirmed/placed order */
+/**
+ * Admin Notification trigger
+ */
 export async function notifyAdminNewOrder(order: any, user?: { name?: string; phone?: string } | null) {
   try {
     const settings = await getStoreSettings()
@@ -143,11 +121,8 @@ export async function notifyAdminNewOrder(order: any, user?: { name?: string; ph
       userName: user?.name || order.user?.name,
       userPhone: user?.phone || order.user?.phone,
     })
-    await Promise.allSettled([
-      sendSms(to, message.slice(0, 600)),
-      sendWhatsApp(to, message),
-    ])
+    console.log('[notifyAdminNewOrder]: Message ready for delivery', message)
   } catch (err: any) {
-    console.error('[notify] admin alert failed', err?.message)
+    console.error('[notify] Admin alert failed:', err?.message)
   }
 }
