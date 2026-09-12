@@ -18,7 +18,6 @@ export async function POST(req: NextRequest) {
     if (!email) return NextResponse.json({ error: 'Email required' }, { status: 400 })
 
     const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password phone')
-    // Always return success to avoid email enumeration
     if (!user) {
       return NextResponse.json({ ok: true, message: 'If that email exists, reset instructions were sent.' })
     }
@@ -31,12 +30,11 @@ export async function POST(req: NextRequest) {
     const base = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000'
     const link = `${base}/auth/reset-password?email=${encodeURIComponent(user.email)}&token=${token}`
 
-    // Prefer SMS if phone on file; otherwise return link in non-production for testing
     if (user.phone) {
       await sendSms(user.phone, `Lifepizza password reset: ${link}`)
     }
 
-    const demo = process.env.ALLOW_DEMO_OTP === 'true'|| process.env.NODE_ENV !== 'production'
+    const demo = process.env.ALLOW_DEMO_OTP === 'true' || process.env.NODE_ENV !== 'production'
     return NextResponse.json({
       ok: true,
       message: user.phone

@@ -47,7 +47,7 @@ export async function sendWhatsApp(to: string) {
 /**
  * Triggers SMS verification OTP via Twilio Verify Service
  */
-export async function sendSms(to: string) {
+export async function sendSms(to: string, p0: string) {
   const sid = process.env.TWILIO_ACCOUNT_SID
   const token = process.env.TWILIO_AUTH_TOKEN
   const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID

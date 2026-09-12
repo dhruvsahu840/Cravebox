@@ -21,6 +21,7 @@ export async function createAndSendOtp(opts: {
       ok: false as const,
       error: 'Enter a valid 10-digit Indian mobile number',
       status: 400,
+      demoOtp: undefined as string | undefined,
     }
   }
 
@@ -44,7 +45,7 @@ export async function createAndSendOtp(opts: {
   const wa = await sendWhatsApp(phone)
 
   // Fallback to SMS via Twilio Verify if WhatsApp fails
-  const sms = wa.ok ? { ok: true as const } : await sendSms(phone)
+  const sms = wa.ok ? { ok: true as const } : await sendSms(phone, 'Your Lifepizza verification code')
 
   const delivered = wa.ok || sms.ok
 
@@ -53,6 +54,7 @@ export async function createAndSendOtp(opts: {
       ok: false as const,
       error: wa.error || sms.error || 'Could not send verification OTP',
       status: 503,
+      demoOtp: undefined as string | undefined,
     }
   }
 
@@ -61,6 +63,7 @@ export async function createAndSendOtp(opts: {
     phone,
     message: wa.ok ? 'OTP sent on WhatsApp' : 'OTP sent via SMS',
     channel: wa.ok ? 'whatsapp' : 'sms',
+    demoOtp: undefined as string | undefined,
   }
 }
 
@@ -91,7 +94,7 @@ export async function verifyOtpCode(opts: {
 
   try {
     const client = twilio(sid, token)
-    const formattedPhone = toE164India(opts.phone) // Produces +918602355924
+    const formattedPhone = toE164India(opts.phone)
 
     const check = await client.verify.v2
       .services(serviceSid)
@@ -110,12 +113,14 @@ export async function verifyOtpCode(opts: {
     return {
       ok: true as const,
       phone: opts.phone,
+      name: undefined as string | undefined, // Added to fix type checking
     }
   } catch (err: any) {
     console.error('[verifyOtpCode Error]:', err?.message || err)
     return {
       ok: false as const,
       error: err?.message || 'Verification check failed',
+      name: undefined as string | undefined,
     }
   }
 }
