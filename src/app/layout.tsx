@@ -13,11 +13,16 @@ const jakarta = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'Lifepizza — Order Fresh Pizza, Burgers & Fast Food in bijawar',
-  description: 'Order fresh pizzas, burgers, sandwiches & maggi online at Lifepizza. Fast 30-minute food delivery across bijawar.',
+  metadataBase: new URL('https://lifepizza.vercel.app'),
+  title: 'Lifepizza — Order Fresh Pizza, Burgers & Fast Food in Bijawar',
+  description: 'Order fresh pizzas, burgers, sandwiches & maggi online at Lifepizza. Fast 30-minute food delivery across Bijawar.',
+  alternates: {
+    canonical: 'https://lifepizza.vercel.app',
+  },
   keywords: [
     'Lifepizza',
-    'Lifepizza bijawar',
+    'Lifepizza Bijawar',
+    'pizza bijawar',
     'pizza delivery bijawar',
     'order food online bijawar',
     'burgers in bijawar',
@@ -29,16 +34,23 @@ export const metadata: Metadata = {
     google: 'YxU77SZlOwi5S2oG_ftJeJONhtNOEE4Ipte8V7Yt7YI',
   },
   icons: {
-    icon: '/icon.png',
-    apple: '/icon.png',
+    icon: [
+      { url: '/icon.png', type: 'image/png', sizes: '32x32' },
+      { url: '/icon.png', type: 'image/png', sizes: '192x192' },
+      { url: '/icon.png', type: 'image/png', sizes: '512x512' },
+    ],
+    shortcut: '/icon.png',
+    apple: [
+      { url: '/icon.png', sizes: '180x180', type: 'image/png' },
+    ],
   },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   openGraph: {
-    title: 'Lifepizza — Order Fresh Pizza, Burgers & Fast Food in bijawar',
-    description: 'Order pizzas, burgers, sandwiches & maggi. Delivered in 30 mins · bijawar',
+    title: 'Lifepizza — Order Fresh Pizza, Burgers & Fast Food in Bijawar',
+    description: 'Order pizzas, burgers, sandwiches & maggi. Delivered in 30 mins · Bijawar',
+    url: 'https://lifepizza.vercel.app',
     siteName: 'Lifepizza',
     images: [
-      { url: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1200&h=630&fit=crop&q=80', width: 1200, height: 630, alt: 'Lifepizza — Fresh Food Delivery' },
+      { url: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1200&h=630&fit=crop&q=80', width: 1200, height: 630, alt: 'Lifepizza — Fresh Food Delivery in Bijawar' },
       { url: '/og-image.svg', width: 1200, height: 630, alt: 'Lifepizza' },
     ],
     locale: 'en_IN',
@@ -46,8 +58,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Lifepizza — Order Fresh Pizza & Fast Food in bijawar',
-    description: 'Order food online. 30-min delivery in bijawar.',
+    title: 'Lifepizza — Order Fresh Pizza & Fast Food in Bijawar',
+    description: 'Order food online. 30-min delivery in Bijawar.',
     images: ['https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1200&q=80'],
   },
 }
@@ -58,11 +70,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     '@type': 'Restaurant',
     name: 'Lifepizza',
     url: 'https://lifepizza.vercel.app',
-    description: 'Fresh pizzas, burgers, sandwiches & maggi delivered fast in bijawar.',
+    description: 'Fresh pizzas, burgers, sandwiches & maggi delivered fast in Bijawar.',
     servesCuisine: ['Pizza', 'Burgers', 'Sandwiches', 'Fast Food'],
     address: {
       '@type': 'PostalAddress',
-      addressLocality: 'bijawar',
+      addressLocality: 'Bijawar',
+      addressRegion: 'Madhya Pradesh',
       addressCountry: 'IN',
     },
   }
@@ -70,7 +83,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={jakarta.variable} suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/icon.png" type="image/png" />
+        <link rel="icon" href="/icon.png" sizes="any" type="image/png" />
         <link rel="apple-touch-icon" href="/icon.png" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#16a34a" />
