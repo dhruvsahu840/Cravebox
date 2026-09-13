@@ -65,6 +65,7 @@ Fresh **white & green** theme — clean, modern, food-tech aesthetic. Color pale
 git clone https://github.com/yourusername/lifepizza.git
 cd lifepizza
 npm install
+npm run dev
 ```
 
 ### 2. Set environment variables
