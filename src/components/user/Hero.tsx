@@ -8,18 +8,18 @@ export function Hero() {
   }
 
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative overflow-hidden bg-green-950">
       <div className="absolute inset-0">
         <Image
-          src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1920&q=80"
-          alt=""
+          src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=65&fm=webp" // Lowered resolution & quality, forced WebP format
+          alt="Lifepizza Fresh Food Delivery Bijawar"
           fill
-          className="object-cover"
+          className="object-cover opacity-30" // Lower opacity natively to reduce overlay rendering cost
           priority
-          sizes="100vw"
+          fetchPriority="high"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 1200px"
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-green-950/90 via-green-900/80 to-emerald-800/70" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(74,222,128,0.15)_0%,_transparent_60%)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-green-950/70 via-green-900/60 to-emerald-950/80" />
       </div>
 
       <div className="relative z-10 w-full max-w-6xl mx-auto px-4 py-8 sm:py-14 md:py-16 text-center animate-fade-up">
