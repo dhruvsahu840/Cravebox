@@ -229,7 +229,7 @@ export function MenuSection() {
                       </button>
                     </div>
                     <div className="p-4 pb-2 pointer-events-none">
-                      <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">{product.name}</h3>
+                      <h3 className="font-bold text-gray-900 mb-1 line-clamp-1 dark:text-white">{product.name}</h3>
                       <p className="text-gray-500 text-xs mb-2 line-clamp-2">{product.description}</p>
                       {(product.calories || product.allergens?.length) && (
                         <p className="text-[10px] text-gray-400 mt-1">

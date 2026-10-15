@@ -69,7 +69,7 @@ export function GuestCheckoutModal({ open, onClose, onSuccess }: Props) {
               <input className="input text-sm pl-9" placeholder="Phone number" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} />
             </div>
             <button onClick={sendOtp} disabled={loading} className="btn-primary w-full py-2.5 flex items-center justify-center gap-2">
-              {loading ? <Loader2 size={16} className="animate-spin" /> : 'Send WhatsApp OTP'}
+              {loading ? <Loader2 size={16} className="animate-spin" /> : 'Send OTP'}
             </button>
           </div>
         ) : (
