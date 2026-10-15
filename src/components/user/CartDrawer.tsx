@@ -1,12 +1,11 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { X, ShoppingCart, Plus, Minus, Trash2, MapPin, ChevronRight, Loader2, Tag, CheckCircle, Clock } from 'lucide-react'
+import { X, ShoppingCart, Plus, Minus, Trash2, MapPin, ChevronRight, Loader2, Tag, CheckCircle, Clock, Truck } from 'lucide-react'
 import { useCart } from '@/store/cartStore'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { getDeliveryEstimate } from '@/lib/delivery'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { FreeDeliveryBar } from '@/components/user/FreeDeliveryBar'
 import { GuestCheckoutModal } from '@/components/user/GuestCheckoutModal'
 import { STORE } from '@/lib/config'
 import { useSettings } from '@/store/settingsStore'
@@ -15,8 +14,6 @@ import toast from 'react-hot-toast'
 export function CartDrawer() {
   const [open, setOpen]           = useState(false)
   const [loading, setLoading]     = useState(false)
-  const [payMethod, setPayMethod] = useState<'razorpay' | 'cod'>('razorpay')
-  const [payDisplay, setPayDisplay] = useState<'card' | 'upi' | 'cod'>('card')
   const [address, setAddress]     = useState({ line1: '', city: '', pincode: '' })
   const [couponCode, setCoupon]   = useState('')
   const [couponData, setCouponData] = useState<any>(null)
@@ -34,10 +31,32 @@ export function CartDrawer() {
   const fetchSettings = useSettings(s => s.fetchSettings)
 
   useEffect(() => {
-    const open = () => { setOpen(true); fetchSettings() }
-    document.addEventListener('open-cart', open)
-    return () => document.removeEventListener('open-cart', open)
+    const openCart = () => {
+      setOpen(true)
+      fetchSettings()
+    }
+
+    document.addEventListener('open-cart', openCart)
+    return () => document.removeEventListener('open-cart', openCart)
   }, [fetchSettings])
+
+  // Lock the page behind the drawer while the cart is open.
+  useEffect(() => {
+    if (!open) return
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [open])
 
   useEffect(() => {
     if (!session?.user?.id) return
@@ -92,7 +111,7 @@ export function CartDrawer() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items: items.map(i => ({ product: i._id, qty: i.qty, customizations: i.customizations })),
-          address, paymentMethod: payMethod,
+          address, paymentMethod: 'cod',
           couponCode: couponData?.coupon?.code || (couponCode || undefined),
           scheduledFor: scheduleLater && scheduledFor ? scheduledFor : undefined,
           useLoyalty,
@@ -101,52 +120,10 @@ export function CartDrawer() {
       const orderData = await orderRes.json()
       if (!orderRes.ok) throw new Error(orderData.error)
 
-      if (payMethod === 'cod') {
-        clearCart(); setOpen(false)
-        toast.success('Order placed! 🎉')
-        router.push(`/orders/${orderData.order._id}`)
-        return
-      }
-
-      const rzpRes  = await fetch('/api/payments/create-order', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId: orderData.order._id }),
-      })
-      const rzpData = await rzpRes.json()
-      if (!rzpRes.ok) throw new Error(rzpData.error)
-
-      const options = {
-        key:      process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount:   rzpData.amount,
-        currency: rzpData.currency,
-        name:     'Lifepizza',
-        description: `Order #${orderData.order.orderNumber}`,
-        order_id: rzpData.razorpayOrderId,
-        prefill: { name: session.user.name, email: session.user.email },
-        theme: { color: '#16a34a' },
-        handler: async (response: any) => {
-          const verifyRes = await fetch('/api/payments/verify', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...response, orderId: orderData.order._id }),
-          })
-          if (verifyRes.ok) {
-            clearCart(); setOpen(false)
-            toast.success('Payment successful! 🎉')
-            router.push(`/orders/${orderData.order._id}`)
-          } else toast.error('Payment verification failed')
-        },
-        modal: {
-          ondismiss: async () => {
-            await fetch('/api/payments/cancel', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ orderId: orderData.order._id }),
-            }).catch(() => {})
-            toast.error('Payment cancelled. You can try again from cart.')
-          },
-        },
-      }
-      ;(window as any).Razorpay(options).open()
+      clearCart()
+      setOpen(false)
+      toast.success('Order placed! 🎉')
+      router.push(`/orders/${orderData.order._id}`)
     } catch (err: any) {
       toast.error(err.message || 'Something went wrong')
     } finally {
@@ -164,7 +141,12 @@ export function CartDrawer() {
     <>
       {open && <div className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm" onClick={() => setOpen(false)} />}
 
-      <div className={`fixed right-0 top-0 bottom-0 w-full max-w-sm bg-white dark:bg-gray-900 border-l border-green-100 dark:border-gray-800 z-50 flex flex-col transition-transform duration-300 shadow-2xl ${open ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Your cart"
+        className={`fixed inset-y-0 right-0 z-50 flex w-full max-w-sm flex-col border-l border-green-100 bg-white shadow-2xl transition-transform duration-300 dark:border-gray-800 dark:bg-gray-900 ${open ? 'translate-x-0' : 'translate-x-full'}`}
+      >
         <div className="flex items-center justify-between p-5 border-b border-green-100 dark:border-gray-800 bg-green-50 dark:bg-gray-800/50">
           <div>
             <h2 className="text-lg font-bold text-green-900 dark:text-white flex items-center gap-2">
@@ -179,7 +161,7 @@ export function CartDrawer() {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-5 space-y-5">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-4 sm:p-5">
           {/* Items */}
           {items.length === 0 ? (
             <EmptyState emoji="🛒" title="Your cart is empty" description="Add something delicious from the menu" actionLabel="Browse menu" onAction={() => { setOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }} />
@@ -274,21 +256,15 @@ export function CartDrawer() {
                 )}
               </div>
 
-              {/* Payment */}
-              <div>
-                <p className="text-sm font-semibold text-gray-700 mb-2">Payment method</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {([
-                    { key: 'card' as const, label: '💳 Card', method: 'razorpay' as const },
-                    { key: 'upi' as const, label: '📱 UPI', method: 'razorpay' as const },
-                    { key: 'cod' as const, label: '💵 Cash', method: 'cod' as const },
-                  ]).map(m => (
-                    <button key={m.key} onClick={() => { setPayDisplay(m.key); setPayMethod(m.method) }}
-                      className={`p-3 rounded-xl border text-xs font-semibold transition-all ${payDisplay === m.key ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 text-gray-500 hover:border-green-300'}`}>
-                      {m.label}
-                    </button>
-                  ))}
+              {/* Cash on Delivery only */}
+              <div className="rounded-xl border border-green-200 bg-green-50/70 p-3 dark:border-green-900 dark:bg-green-950/30">
+                <p className="mb-1 text-sm font-semibold text-gray-800 dark:text-gray-100">Payment method</p>
+                <div className="flex items-center gap-2 text-sm font-semibold text-green-700 dark:text-green-400">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-lg shadow-sm dark:bg-gray-800">💵</span>
+                  Cash on Delivery
+                  <CheckCircle size={16} className="ml-auto" />
                 </div>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Pay in cash when your order arrives.</p>
               </div>
 
               {loyaltyPoints >= 100 && (
@@ -303,24 +279,39 @@ export function CartDrawer() {
 
         {/* Footer */}
         {items.length > 0 && (
-          <div className="p-5 border-t border-green-100 bg-green-50 dark:bg-gray-800/50 space-y-3">
-            <FreeDeliveryBar subtotal={totalPrice()} />
-            <div className="space-y-1.5 text-sm text-gray-500">
+          <div className="shrink-0 space-y-2.5 border-t border-green-100 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+            {totalPrice() >= freeDeliveryMin ? (
+              <div className="flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2 text-xs font-semibold text-green-700 dark:bg-green-950/40 dark:text-green-400">
+                <Truck size={15} />
+                You unlocked free delivery!
+              </div>
+            ) : (
+              <div className="rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-800">
+                <div className="mb-1.5 flex items-center justify-between gap-2 text-[11px] text-gray-600 dark:text-gray-300">
+                  <span className="flex items-center gap-1"><Truck size={13} /> Free delivery</span>
+                  <span className="font-semibold">Add ₹{Math.max(0, freeDeliveryMin - totalPrice())} more</span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                  <div
+                    className="h-full rounded-full bg-green-500 transition-all"
+                    style={{ width: `${Math.min(100, freeDeliveryMin > 0 ? (totalPrice() / freeDeliveryMin) * 100 : 100)}%` }}
+                  />
+                </div>
+              </div>
+            )}
+            <div className="space-y-1 text-sm text-gray-500">
               <div className="flex justify-between"><span>Subtotal</span><span className="text-gray-700">₹{totalPrice()}</span></div>
               <div className="flex justify-between"><span>Delivery</span><span className={deliveryFee() === 0 ? 'text-green-600 font-semibold' : 'text-gray-700'}>{deliveryFee() === 0 ? 'FREE' : `₹${deliveryFee()}`}</span></div>
               <div className="flex justify-between"><span>Tax ({Math.round(taxRate * 1000) / 10}%)</span><span className="text-gray-700">₹{tax()}</span></div>
               {discount > 0 && <div className="flex justify-between text-green-600 font-semibold"><span>Discount</span><span>−₹{discount}</span></div>}
             </div>
-            <div className="flex justify-between font-black text-lg border-t border-green-200 pt-3 text-green-900">
+            <div className="flex justify-between border-t border-gray-100 pt-2 text-base font-black text-gray-900 dark:border-gray-700 dark:text-white">
               <span>Total</span><span className="text-green-600">₹{grandTotal}</span>
             </div>
-            <button onClick={placeOrder} disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2 py-3.5">
+            <button onClick={placeOrder} disabled={loading} className="btn-primary flex w-full items-center justify-center gap-2 rounded-xl py-3">
               {loading ? <Loader2 size={18} className="animate-spin" /> : <ChevronRight size={18} />}
               {loading ? 'Processing…' : `Place Order · ₹${grandTotal}`}
             </button>
-            {deliveryFee() > 0 && (
-              <p className="text-center text-xs text-gray-400">Add ₹{freeDeliveryMin - totalPrice()} more for free delivery</p>
-            )}
           </div>
         )}
       </div>

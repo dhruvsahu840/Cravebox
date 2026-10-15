@@ -74,8 +74,8 @@ export function GuestCheckoutModal({ open, onClose, onSuccess }: Props) {
           </div>
         ) : (
           <div className="space-y-3">
-            <p className="text-sm text-gray-500">Enter the 4-digit code sent to {phone}</p>
-            <input className="input text-sm text-center text-2xl tracking-[0.5em] font-bold" placeholder="----" maxLength={4} value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, ''))} />
+            <p className="text-sm text-gray-500">Enter the 6-digit code sent to {phone}</p>
+            <input className="input text-sm text-center text-2xl tracking-[0.5em] font-bold" placeholder="------" maxLength={6} value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, ''))} />
             <button onClick={verify} disabled={loading} className="btn-primary w-full py-2.5">
               {loading ? <Loader2 size={16} className="animate-spin mx-auto" /> : 'Verify & continue'}
             </button>
