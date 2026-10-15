@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       ok: true,
       message: result.message,
-      ...(result.demoOtp ? { demoOtp: result.demoOtp } : {}),
+      channel: result.channel,
     })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })

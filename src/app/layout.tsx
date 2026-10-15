@@ -98,7 +98,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           async
         />
       </head>
-      <body className="font-sans">
+      <body className={`${jakarta.className} font-sans`}>
         <ServiceWorkerRegistration />
 
         <Providers>

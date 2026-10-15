@@ -1,10 +1,84 @@
-import twilio from 'twilio'
+import { randomInt } from 'crypto'
+import bcrypt from 'bcryptjs'
+
 import { connectDB } from '@/lib/db'
 import { OtpSession } from '@/models'
-import { sendWhatsApp, sendSms } from '@/lib/notify'
-import { isValidIndianPhone, normalizePhone, toE164India } from '@/lib/auth/phone'
+import {
+  isValidIndianPhone,
+  normalizePhone,
+} from '@/lib/auth/phone'
 
 export type OtpPurpose = 'login' | 'link_phone'
+
+const OTP_EXPIRY_MS = 10 * 60 * 1000
+const MAX_ATTEMPTS = 5
+
+async function sendApitxtOtp(
+  phone: string,
+  otp: string
+): Promise<{ ok: boolean; error?: string }> {
+  const authKey = process.env.APITXT_AUTH_KEY
+
+  if (!authKey) {
+    return {
+      ok: false,
+      error: 'APITxT API key is not configured',
+    }
+  }
+
+  try {
+    const params = new URLSearchParams({
+      authkey: authKey,
+      mobile: `91${phone}`,
+      otp,
+      channel: 'sms',
+    })
+
+    const response = await fetch(
+      `https://apitxt.com/api/sendOTP?${params.toString()}`,
+      {
+        method: 'GET',
+        cache: 'no-store',
+        signal: AbortSignal.timeout(15000),
+      }
+    )
+
+    const data = await response.json()
+
+    if (
+      !response.ok ||
+      String(data.status).toLowerCase() !== 'success'
+    ) {
+      console.error('[APITxT] OTP request failed:', {
+        httpStatus: response.status,
+        status: data.status,
+        message: data.message,
+      })
+
+      return {
+        ok: false,
+        error: 'Could not send OTP. Please try again later.',
+      }
+    }
+
+    console.log('[APITxT] OTP request accepted:', {
+      requestId: data.data?.request_id,
+      cost: data.data?.cost,
+    })
+
+    return { ok: true }
+  } catch (error: any) {
+    console.error(
+      '[APITxT] Request error:',
+      error?.message || 'Unknown error'
+    )
+
+    return {
+      ok: false,
+      error: 'OTP service is temporarily unavailable',
+    }
+  }
+}
 
 export async function createAndSendOtp(opts: {
   phone: string
@@ -21,49 +95,58 @@ export async function createAndSendOtp(opts: {
       ok: false as const,
       error: 'Enter a valid 10-digit Indian mobile number',
       status: 400,
-      demoOtp: undefined as string | undefined,
     }
   }
 
   const purpose = opts.purpose || 'login'
+  const mockMode =
+    process.env.APITXT_MOCK_MODE === 'true'
 
-  // Clean up existing pending sessions for this phone/purpose
+  const otp = String(randomInt(100000, 1000000))
+  const otpHash = await bcrypt.hash(otp, 10)
+
   await OtpSession.deleteMany({ phone, purpose })
 
-  // Save pending session metadata in MongoDB
-  await OtpSession.create({
+  const otpSession = await OtpSession.create({
     phone,
-    otpHash: 'TWILIO_VERIFY_MANAGED', // Handled remotely by Twilio Verify API
+    otpHash,
     name: (opts.name || '').trim().slice(0, 60),
     purpose,
     userId: opts.userId || undefined,
     attempts: 0,
-    expiresAt: new Date(Date.now() + 10 * 60_000),
+    verified: false,
+    expiresAt: new Date(Date.now() + OTP_EXPIRY_MS),
   })
 
-  // Try WhatsApp Delivery via Twilio Verify
-  const wa = await sendWhatsApp(phone)
+  if (mockMode) {
+    // Development only. Never enable mock mode in production.
+    console.info(`[OTP MOCK] ${phone}: ${otp}`)
 
-  // Fallback to SMS via Twilio Verify if WhatsApp fails
-  const sms = wa.ok ? { ok: true as const } : await sendSms(phone, 'Your Lifepizza verification code')
+    return {
+      ok: true as const,
+      phone,
+      message: 'Development OTP generated. Check your terminal.',
+      channel: 'mock',
+    }
+  }
 
-  const delivered = wa.ok || sms.ok
+  const delivery = await sendApitxtOtp(phone, otp)
 
-  if (!delivered) {
+  if (!delivery.ok) {
+    await OtpSession.deleteOne({ _id: otpSession._id })
+
     return {
       ok: false as const,
-      error: wa.error || sms.error || 'Could not send verification OTP',
+      error: delivery.error || 'Could not send OTP',
       status: 503,
-      demoOtp: undefined as string | undefined,
     }
   }
 
   return {
     ok: true as const,
     phone,
-    message: wa.ok ? 'OTP sent on WhatsApp' : 'OTP sent via SMS',
-    channel: wa.ok ? 'whatsapp' : 'sms',
-    demoOtp: undefined as string | undefined,
+    message: 'OTP sent via SMS',
+    channel: 'sms',
   }
 }
 
@@ -71,56 +154,125 @@ export async function verifyOtpCode(opts: {
   phone: string
   otp: string
   purpose?: string
+  userId?: string
 }) {
-  const code = String(opts.otp || '').trim()
+  await connectDB()
 
-  if (!isValidIndianPhone(opts.phone) || code.length < 4) {
+  const phone = normalizePhone(opts.phone)
+  const code = String(opts.otp || '').trim()
+  const purpose = opts.purpose || 'login'
+
+  if (!isValidIndianPhone(phone) || !/^\d{6}$/.test(code)) {
     return {
       ok: false as const,
       error: 'Invalid phone or OTP code',
     }
   }
 
-  const sid = process.env.TWILIO_ACCOUNT_SID
-  const token = process.env.TWILIO_AUTH_TOKEN
-  const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID
+  const query: Record<string, any> = {
+    phone,
+    purpose,
+    expiresAt: { $gt: new Date() },
+    verified: false,
+  }
 
-  if (!sid || !token || !serviceSid) {
+  // Phone-link OTPs must belong to the signed-in user
+  // who requested them.
+  if (opts.userId) {
+    query.userId = opts.userId
+  }
+
+ const session = await OtpSession.findOne(query)
+
+ console.log('[OTP VERIFY DEBUG]', {
+  phone,
+  purpose,
+  otpLength: code.length,
+  sessionFound: Boolean(session),
+  sessionPhone: session?.phone,
+  expiresAt: session?.expiresAt,
+  attempts: session?.attempts,
+  verified: session?.verified,
+})
+
+
+
+if (!session) {
+  const latest: any = await OtpSession.findOne({
+    phone,
+    purpose,
+  })
+    .select('expiresAt verified attempts')
+    .sort({ createdAt: -1 })
+    .lean()
+    .exec()
+
+  console.warn('[OTP verify] No eligible OTP session:', {
+    purpose,
+    sessionFound: Boolean(latest),
+    expired: latest?.expiresAt
+      ? new Date(latest.expiresAt).getTime() <= Date.now()
+      : null,
+    verified: latest?.verified ?? null,
+    attempts: latest?.attempts ?? null,
+  })
+
+  return {
+    ok: false as const,
+    error: 'OTP expired or not found. Please request a new one.',
+  }
+}
+
+
+
+  if (session.attempts >= MAX_ATTEMPTS) {
+    await OtpSession.deleteOne({ _id: session._id })
+
     return {
       ok: false as const,
-      error: 'Twilio Verify settings unconfigured in environment',
+      error: 'Too many incorrect attempts. Request a new OTP.',
     }
   }
 
-  try {
-    const client = twilio(sid, token)
-    const formattedPhone = toE164India(opts.phone)
+  const matches = await bcrypt.compare(code, session.otpHash)
 
-    const check = await client.verify.v2
-      .services(serviceSid)
-      .verificationChecks.create({
-        to: formattedPhone,
-        code: code,
-      })
+  console.log('[OTP HASH MATCH]', matches)
 
-    if (check.status !== 'approved') {
-      return {
-        ok: false as const,
-        error: 'Invalid or expired OTP code',
-      }
+  if (!matches) {
+    const updated = await OtpSession.findOneAndUpdate(
+      {
+        _id: session._id,
+        attempts: { $lt: MAX_ATTEMPTS },
+      },
+      { $inc: { attempts: 1 } },
+      { new: true }
+    )
+
+    if (updated && updated.attempts >= MAX_ATTEMPTS) {
+      await OtpSession.deleteOne({ _id: session._id })
     }
 
-    return {
-      ok: true as const,
-      phone: opts.phone,
-      name: undefined as string | undefined, // Added to fix type checking
-    }
-  } catch (err: any) {
-    console.error('[verifyOtpCode Error]:', err?.message || err)
     return {
       ok: false as const,
-      error: err?.message || 'Verification check failed',
-      name: undefined as string | undefined,
+      error: 'Invalid OTP code',
     }
+  }
+
+  // Delete before returning success to prevent OTP reuse.
+  const consumed = await OtpSession.deleteOne({
+    _id: session._id,
+  })
+
+  if (consumed.deletedCount !== 1) {
+    return {
+      ok: false as const,
+      error: 'OTP has already been used. Request a new one.',
+    }
+  }
+
+  return {
+    ok: true as const,
+    phone,
+    name: session.name || undefined,
   }
 }

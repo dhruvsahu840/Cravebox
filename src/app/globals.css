@@ -5,10 +5,10 @@
 @layer base {
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
-  body {
-    @apply text-gray-900 dark:text-gray-100 antialiased font-sans;
-    background-color: #f4faf6;
-  }
+ body {
+  @apply text-gray-900 dark:text-gray-100 antialiased font-sans;
+  background-color: #f4faf6;
+}
   .dark body {
     background-color: #0a1a0f;
   }
@@ -167,4 +167,9 @@
 }
 .toast-anim {
   animation: toast-in 0.35s cubic-bezier(0.21, 1.02, 0.73, 1) forwards;
+}
+
+html {
+  --font-jakarta: "__Plus_Jakarta_Sans_a11773",
+    "__Plus_Jakarta_Sans_Fallback_a11773";
 }

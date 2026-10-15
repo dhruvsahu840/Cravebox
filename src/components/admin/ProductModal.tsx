@@ -1,24 +1,39 @@
 'use client'
+
 import { useMemo, useState } from 'react'
 import { X, Upload, Loader2, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Image from 'next/image'
-import { buildSizeCustomizations, getSizeGroup, PIZZA_SIZES } from '@/lib/productPricing'
+import {
+  buildSizeCustomizations,
+  getSizeGroup,
+  PIZZA_SIZES,
+} from '@/lib/productPricing'
 
-interface Props { product?: any; categories: any[]; onClose: () => void; onSave: (product: any) => void }
+interface Props {
+  product?: any
+  categories: any[]
+  onClose: () => void
+  onSave: (product: any) => void
+}
 
 function isPizzaCategory(categories: any[], categoryId: string) {
   const cat = categories.find((c: any) => c._id === categoryId)
+
   if (!cat) return false
+
   const slug = (cat.slug || '').toLowerCase()
   const name = (cat.name || '').toLowerCase()
+
   return slug === 'pizza' || name.includes('pizza')
 }
 
 function initialSizePrices(product?: any) {
   const sizeGroup = getSizeGroup(product?.customizations)
+
   const get = (label: string) =>
     sizeGroup?.options?.find((o: any) => o.label === label)?.price
+
   return {
     Personal: get('Personal') ?? product?.price ?? '',
     Medium: get('Medium') ?? '',
@@ -26,138 +41,443 @@ function initialSizePrices(product?: any) {
   }
 }
 
-export function ProductModal({ product, categories, onClose, onSave }: Props) {
+export function ProductModal({
+  product,
+  categories,
+  onClose,
+  onSave,
+}: Props) {
   const [form, setForm] = useState({
-    name: product?.name || '', description: product?.description || '',
-    price: product?.price || '', discountedPrice: product?.discountedPrice || '',
-    category: product?.category?._id || product?.category || '', images: product?.images || [],
-    isVeg: product?.isVeg ?? false, isBestseller: product?.isBestseller ?? false,
-    isSpicy: product?.isSpicy ?? false, isFeatured: product?.isFeatured ?? false,
-    isAvailable: product?.isAvailable ?? true, tags: product?.tags?.join(', ') || '',
+    name: product?.name || '',
+    description: product?.description || '',
+    price: product?.price ?? '',
+    discountedPrice: product?.discountedPrice ?? '',
+    category: product?.category?._id || product?.category || '',
+    images: product?.images || [],
+
+    // New products default to VEG.
+    // Existing products keep their saved value.
+    isVeg: product?.isVeg ?? true,
+
+    isBestseller: product?.isBestseller ?? false,
+    isSpicy: product?.isSpicy ?? false,
+    isFeatured: product?.isFeatured ?? false,
+
+    // New products default to AVAILABLE.
+    // Existing products keep their saved value.
+    isAvailable: product?.isAvailable ?? true,
+
+    tags: product?.tags?.join(', ') || '',
   })
-  const [sizePrices, setSizePrices] = useState<Record<string, string | number>>(initialSizePrices(product))
+
+  const [sizePrices, setSizePrices] = useState<
+    Record<string, string | number>
+  >(initialSizePrices(product))
+
   const [uploading, setUploading] = useState(false)
-  const [saving, setSaving]       = useState(false)
+  const [saving, setSaving] = useState(false)
 
-  const isPizza = useMemo(() => isPizzaCategory(categories, form.category), [categories, form.category])
+  const isPizza = useMemo(
+    () => isPizzaCategory(categories, form.category),
+    [categories, form.category]
+  )
 
-  const set = (key: string, val: any) => setForm(f => ({ ...f, [key]: val }))
-  const setSize = (label: string, val: string) => setSizePrices(s => ({ ...s, [label]: val }))
-
-  const uploadImage = async (file: File) => {
-    setUploading(true)
-    const fd = new FormData(); fd.append('file', file)
-    const res  = await fetch('/api/upload', { method: 'POST', body: fd })
-    const data = await res.json()
-    setUploading(false)
-    if (res.ok) { setForm(f => ({ ...f, images: [...f.images, data.url] })); toast.success('Image uploaded!') }
-    else toast.error(data.error || 'Upload failed')
+  const set = (key: string, val: any) => {
+    setForm((f) => ({
+      ...f,
+      [key]: val,
+    }))
   }
 
-  const removeImage = (idx: number) => setForm(f => ({ ...f, images: f.images.filter((_: string, i: number) => i !== idx) }))
+  const setSize = (label: string, val: string) => {
+    setSizePrices((s) => ({
+      ...s,
+      [label]: val,
+    }))
+  }
+
+  const uploadImage = async (file: File) => {
+    try {
+      setUploading(true)
+
+      const fd = new FormData()
+      fd.append('file', file)
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: fd,
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        toast.error(data?.error || 'Upload failed')
+        return
+      }
+
+      if (!data?.url) {
+        toast.error('Upload succeeded but image URL is missing')
+        return
+      }
+
+      setForm((f) => ({
+        ...f,
+        images: [...f.images, data.url],
+      }))
+
+      toast.success('Image uploaded!')
+    } catch (error) {
+      console.error('[ProductModal] Image upload error:', error)
+      toast.error('Image upload failed')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const removeImage = (idx: number) => {
+    setForm((f) => ({
+      ...f,
+      images: f.images.filter(
+        (_: string, i: number) => i !== idx
+      ),
+    }))
+  }
 
   const handleSubmit = async () => {
-    if (!form.name || !form.category) { toast.error('Name and category are required'); return }
+    if (!form.name.trim() || !form.category) {
+      toast.error('Name and category are required')
+      return
+    }
 
     let payload: any = {
-      ...form,
-      tags: form.tags.split(',').map((t: string) => t.trim()).filter(Boolean),
+      name: form.name.trim(),
+      description: form.description.trim(),
+      category: form.category,
+      images: form.images,
+
+      // Explicit booleans.
+      isVeg: Boolean(form.isVeg),
+      isBestseller: Boolean(form.isBestseller),
+      isSpicy: Boolean(form.isSpicy),
+      isFeatured: Boolean(form.isFeatured),
+      isAvailable: Boolean(form.isAvailable),
+
+      tags: form.tags
+        .split(',')
+        .map((t: string) => t.trim())
+        .filter(Boolean),
     }
 
     if (isPizza) {
       const personal = Number(sizePrices.Personal)
       const medium = Number(sizePrices.Medium)
       const large = Number(sizePrices.Large)
+
       if (!personal || !medium || !large) {
-        toast.error('Set Personal, Medium, and Large prices')
+        toast.error(
+          'Set Personal, Medium, and Large prices'
+        )
         return
       }
+
       payload.price = personal
       payload.discountedPrice = null
-      payload.customizations = buildSizeCustomizations(personal, medium, large)
+      payload.customizations =
+        buildSizeCustomizations(
+          personal,
+          medium,
+          large
+        )
     } else {
-      if (!form.price) { toast.error('Name, price, and category are required'); return }
+      if (!form.price) {
+        toast.error(
+          'Name, price, and category are required'
+        )
+        return
+      }
+
       payload.price = Number(form.price)
-      payload.discountedPrice = form.discountedPrice ? Number(form.discountedPrice) : undefined
-      // Clear pizza sizes if product was moved out of pizza category
+
+      payload.discountedPrice =
+        form.discountedPrice !== '' &&
+        form.discountedPrice !== null
+          ? Number(form.discountedPrice)
+          : null
+
+      // Clear pizza sizes if product was moved
+      // out of the pizza category.
       if (getSizeGroup(product?.customizations)) {
         payload.customizations = []
       }
     }
 
-    setSaving(true)
-    const url = product ? `/api/products/${product._id}` : '/api/products'
-    const method = product ? 'PUT' : 'POST'
-    const res  = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-    const data = await res.json()
-    setSaving(false)
-    if (res.ok) { toast.success(product ? 'Product updated!' : 'Product created!'); onSave(data.product) }
-    else toast.error(data.error || 'Failed to save')
+    try {
+      setSaving(true)
+
+      const url = product
+        ? `/api/products/${product._id}`
+        : '/api/products'
+
+      const method = product ? 'PUT' : 'POST'
+
+      console.log('[ProductModal] Saving product:', {
+        method,
+        url,
+        isVeg: payload.isVeg,
+        isAvailable: payload.isAvailable,
+      })
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        console.error(
+          '[ProductModal] Save failed:',
+          data
+        )
+
+        toast.error(
+          data?.error || 'Failed to save product'
+        )
+
+        return
+      }
+
+      if (!data?.product) {
+        console.error(
+          '[ProductModal] API returned no product:',
+          data
+        )
+
+        toast.error(
+          'Product saved but server returned invalid data'
+        )
+
+        return
+      }
+
+      console.log(
+        '[ProductModal] Product saved successfully:',
+        {
+          id: data.product._id,
+          isVeg: data.product.isVeg,
+          isAvailable: data.product.isAvailable,
+        }
+      )
+
+      toast.success(
+        product
+          ? 'Product updated!'
+          : 'Product created!'
+      )
+
+      onSave(data.product)
+    } catch (error) {
+      console.error(
+        '[ProductModal] Save error:',
+        error
+      )
+
+      toast.error(
+        'Something went wrong while saving the product'
+      )
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="bg-white border border-green-100 rounded-t-2xl sm:rounded-2xl w-full max-w-xl max-h-[92vh] sm:max-h-[90vh] overflow-y-auto shadow-xl">
+
         <div className="flex items-center justify-between p-5 border-b border-green-100 sticky top-0 bg-white z-10">
-          <h2 className="text-lg font-bold text-green-900">{product ? 'Edit product' : 'Add new product'}</h2>
-          <button onClick={onClose} className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center hover:bg-green-100">
-            <X size={16} className="text-gray-500"/>
+          <h2 className="text-lg font-bold text-green-900">
+            {product ? 'Edit product' : 'Add new product'}
+          </h2>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center hover:bg-green-100"
+          >
+            <X size={16} className="text-gray-500" />
           </button>
         </div>
 
         <div className="p-5 space-y-4">
+
+          {/* Images */}
           <div>
-            <label className="text-sm font-semibold text-gray-600 mb-2 block">Product images</label>
+            <label className="text-sm font-semibold text-gray-600 mb-2 block">
+              Product images
+            </label>
+
             <div className="flex gap-2 flex-wrap mb-2">
-              {form.images.map((url: string, i: number) => (
-                <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden group border border-green-100">
-                  <Image src={url} alt="" fill className="object-cover"/>
-                  <button onClick={() => removeImage(i)} className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-red-300">
-                    <Trash2 size={16}/>
-                  </button>
-                </div>
-              ))}
+              {form.images.map(
+                (url: string, i: number) => (
+                  <div
+                    key={i}
+                    className="relative w-20 h-20 rounded-xl overflow-hidden group border border-green-100"
+                  >
+                    <Image
+                      src={url}
+                      alt=""
+                      fill
+                      className="object-cover"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => removeImage(i)}
+                      className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-red-300"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                )
+              )}
+
               <label className="w-20 h-20 rounded-xl border-2 border-dashed border-green-200 flex flex-col items-center justify-center cursor-pointer hover:border-green-500 transition-colors text-gray-400 hover:text-green-600">
-                {uploading ? <Loader2 size={20} className="animate-spin"/> : <><Upload size={18}/><span className="text-xs mt-1">Upload</span></>}
-                <input type="file" accept="image/*" className="hidden" onChange={e => e.target.files?.[0] && uploadImage(e.target.files[0])} />
+                {uploading ? (
+                  <Loader2
+                    size={20}
+                    className="animate-spin"
+                  />
+                ) : (
+                  <>
+                    <Upload size={18} />
+                    <span className="text-xs mt-1">
+                      Upload
+                    </span>
+                  </>
+                )}
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={uploading}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+
+                    if (file) {
+                      uploadImage(file)
+                    }
+
+                    e.currentTarget.value = ''
+                  }}
+                />
               </label>
             </div>
           </div>
 
+          {/* Name */}
           <div>
-            <label className="text-sm font-semibold text-gray-600 mb-1 block">Name *</label>
-            <input className="input" placeholder="e.g. Margherita Pizza" value={form.name} onChange={e => set('name', e.target.value)} />
-          </div>
-          <div>
-            <label className="text-sm font-semibold text-gray-600 mb-1 block">Description *</label>
-            <textarea className="input resize-none h-20" placeholder="Short description" value={form.description} onChange={e => set('description', e.target.value)} />
+            <label className="text-sm font-semibold text-gray-600 mb-1 block">
+              Name *
+            </label>
+
+            <input
+              className="input"
+              placeholder="e.g. Margherita Pizza"
+              value={form.name}
+              onChange={(e) =>
+                set('name', e.target.value)
+              }
+            />
           </div>
 
+          {/* Description */}
           <div>
-            <label className="text-sm font-semibold text-gray-600 mb-1 block">Category *</label>
-            <select className="input" value={form.category} onChange={e => set('category', e.target.value)}>
-              <option value="">Select category</option>
-              {categories.map((c: any) => <option key={c._id} value={c._id}>{c.name}</option>)}
+            <label className="text-sm font-semibold text-gray-600 mb-1 block">
+              Description *
+            </label>
+
+            <textarea
+              className="input resize-none h-20"
+              placeholder="Short description"
+              value={form.description}
+              onChange={(e) =>
+                set('description', e.target.value)
+              }
+            />
+          </div>
+
+          {/* Category */}
+          <div>
+            <label className="text-sm font-semibold text-gray-600 mb-1 block">
+              Category *
+            </label>
+
+            <select
+              className="input"
+              value={form.category}
+              onChange={(e) =>
+                set('category', e.target.value)
+              }
+            >
+              <option value="">
+                Select category
+              </option>
+
+              {categories.map((c: any) => (
+                <option
+                  key={c._id}
+                  value={c._id}
+                >
+                  {c.name}
+                </option>
+              ))}
             </select>
           </div>
 
+          {/* Pizza pricing */}
           {isPizza ? (
             <div className="rounded-xl border border-green-200 bg-green-50/50 p-4 space-y-3">
               <div>
-                <p className="text-sm font-bold text-green-800">Pizza sizes & prices *</p>
-                <p className="text-xs text-gray-500 mt-0.5">Customers will choose Personal, Medium, or Large</p>
+                <p className="text-sm font-bold text-green-800">
+                  Pizza sizes & prices *
+                </p>
+
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Customers will choose Personal,
+                  Medium, or Large
+                </p>
               </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {PIZZA_SIZES.map(label => (
+                {PIZZA_SIZES.map((label) => (
                   <div key={label}>
-                    <label className="text-sm font-semibold text-gray-600 mb-1 block">{label} (₹)</label>
+                    <label className="text-sm font-semibold text-gray-600 mb-1 block">
+                      {label} (₹)
+                    </label>
+
                     <input
                       type="number"
                       min={1}
                       className="input"
-                      placeholder={label === 'Personal' ? '199' : label === 'Medium' ? '279' : '349'}
+                      placeholder={
+                        label === 'Personal'
+                          ? '199'
+                          : label === 'Medium'
+                            ? '279'
+                            : '349'
+                      }
                       value={sizePrices[label]}
-                      onChange={e => setSize(label, e.target.value)}
+                      onChange={(e) =>
+                        setSize(
+                          label,
+                          e.target.value
+                        )
+                      }
                     />
                   </div>
                 ))}
@@ -165,46 +485,157 @@ export function ProductModal({ product, categories, onClose, onSave }: Props) {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
               <div>
-                <label className="text-sm font-semibold text-gray-600 mb-1 block">Price (₹) *</label>
-                <input type="number" className="input" placeholder="199" value={form.price} onChange={e => set('price', e.target.value)} />
+                <label className="text-sm font-semibold text-gray-600 mb-1 block">
+                  Price (₹) *
+                </label>
+
+                <input
+                  type="number"
+                  min={1}
+                  className="input"
+                  placeholder="199"
+                  value={form.price}
+                  onChange={(e) =>
+                    set('price', e.target.value)
+                  }
+                />
               </div>
+
               <div>
-                <label className="text-sm font-semibold text-gray-600 mb-1 block">Discounted price (₹)</label>
-                <input type="number" className="input" placeholder="Optional" value={form.discountedPrice} onChange={e => set('discountedPrice', e.target.value)} />
+                <label className="text-sm font-semibold text-gray-600 mb-1 block">
+                  Discounted price (₹)
+                </label>
+
+                <input
+                  type="number"
+                  min={0}
+                  className="input"
+                  placeholder="Optional"
+                  value={form.discountedPrice}
+                  onChange={(e) =>
+                    set(
+                      'discountedPrice',
+                      e.target.value
+                    )
+                  }
+                />
               </div>
+
             </div>
           )}
 
+          {/* Tags */}
           <div>
-            <label className="text-sm font-semibold text-gray-600 mb-1 block">Tags (comma separated)</label>
-            <input className="input" placeholder="spicy, cheese, popular" value={form.tags} onChange={e => set('tags', e.target.value)} />
+            <label className="text-sm font-semibold text-gray-600 mb-1 block">
+              Tags (comma separated)
+            </label>
+
+            <input
+              className="input"
+              placeholder="spicy, cheese, popular"
+              value={form.tags}
+              onChange={(e) =>
+                set('tags', e.target.value)
+              }
+            />
           </div>
 
+          {/* Product options */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {[
-              { key: 'isVeg', label: '🟢 Vegetarian' }, { key: 'isBestseller', label: '🔥 Bestseller' },
-              { key: 'isSpicy', label: '🌶️ Spicy' }, { key: 'isFeatured', label: '⭐ Featured' },
-              { key: 'isAvailable', label: '✅ Available' },
-            ].map(({ key, label }) => (
-              <button key={key} type="button" onClick={() => set(key, !(form as any)[key])}
-                className={`flex items-center gap-2 p-3 rounded-xl border text-sm font-medium transition-all ${(form as any)[key] ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 text-gray-400 hover:border-green-300'}`}>
-                <span className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${(form as any)[key] ? 'border-green-500 bg-green-500' : 'border-gray-300'}`}>
-                  {(form as any)[key] && <span className="text-white text-xs">✓</span>}
-                </span>
-                {label}
-              </button>
-            ))}
+              {
+                key: 'isVeg',
+                label: '🟢 Vegetarian',
+              },
+              {
+                key: 'isBestseller',
+                label: '🔥 Bestseller',
+              },
+              {
+                key: 'isSpicy',
+                label: '🌶️ Spicy',
+              },
+              {
+                key: 'isFeatured',
+                label: '⭐ Featured',
+              },
+              {
+                key: 'isAvailable',
+                label: '✅ Available',
+              },
+            ].map(({ key, label }) => {
+              const checked = Boolean(
+                (form as any)[key]
+              )
+
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() =>
+                    set(key, !checked)
+                  }
+                  className={`flex items-center gap-2 p-3 rounded-xl border text-sm font-medium transition-all ${
+                    checked
+                      ? 'border-green-500 bg-green-50 text-green-700'
+                      : 'border-gray-200 text-gray-400 hover:border-green-300'
+                  }`}
+                >
+                  <span
+                    className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                      checked
+                        ? 'border-green-500 bg-green-500'
+                        : 'border-gray-300'
+                    }`}
+                  >
+                    {checked && (
+                      <span className="text-white text-xs">
+                        ✓
+                      </span>
+                    )}
+                  </span>
+
+                  {label}
+                </button>
+              )
+            })}
           </div>
         </div>
 
+        {/* Footer */}
         <div className="flex gap-3 p-5 border-t border-green-100 sticky bottom-0 bg-white">
-          <button onClick={onClose} className="btn-secondary flex-1">Cancel</button>
-          <button onClick={handleSubmit} disabled={saving} className="btn-primary flex-1 flex items-center justify-center gap-2">
-            {saving ? <Loader2 size={16} className="animate-spin"/> : null}
-            {saving ? 'Saving...' : (product ? 'Save changes' : 'Add product')}
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={saving}
+            className="btn-secondary flex-1"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={saving || uploading}
+            className="btn-primary flex-1 flex items-center justify-center gap-2"
+          >
+            {saving ? (
+              <Loader2
+                size={16}
+                className="animate-spin"
+              />
+            ) : null}
+
+            {saving
+              ? 'Saving...'
+              : product
+                ? 'Save changes'
+                : 'Add product'}
           </button>
         </div>
+
       </div>
     </div>
   )
